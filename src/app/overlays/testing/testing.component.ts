@@ -85,8 +85,6 @@ export class TestingComponent implements OnInit {
         playercamsInfo: { 
         enable: true,
         enabledPlayers: ["FNC OO AA EE#1337", "nobii#DEBUG"],
-        identifier: "SPPCXVBJZE",
-        secret: "MH20uCY3",
         removeTricodes: false,
       },
         nameOverrides: { overrides: nameOverrideMap },

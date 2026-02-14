@@ -66,6 +66,7 @@ export class TestingAgentSelectComponent implements OnInit {
         },
         timeoutDuration: 60,
         timeoutCounter: {
+          max: 2,
           left: 2,
           right: 2,
         },

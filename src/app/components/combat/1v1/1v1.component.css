@@ -98,6 +98,14 @@
     }
 }
 
+.dead-left {
+    animation: slide-in-playercam-left 0.2s ease-in-out 0.45s both;
+}
+
+.dead-right {
+    animation: slide-in-playercam-right 0.2s ease-in-out 0.45s both;
+}
+
 /* Team accent styling */
 .team-accent.attacker {
     background-color: var(--color-attacker-primary);

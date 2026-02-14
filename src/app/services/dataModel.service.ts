@@ -17,7 +17,7 @@ export class DataModelService {
 
   constructor() {
     this.route.queryParams.subscribe((params) => {
-      this.groupCode.set(params["groupCode"] || "");
+      this.groupCode.set(((params["groupCode"] as string) || "").toUpperCase());
       this.sessionId.set(params["sessionId"] || "");
       const paramLang = params["lang"]?.toLowerCase() || "en";
       console.log("Setting language to", paramLang);
@@ -174,6 +174,7 @@ const initialMatchData: IMatchData = {
     timeoutDuration: 60,
     timeoutCancellationGracePeriod: 10,
     timeoutCounter: {
+      max: 2,
       left: 2,
       right: 2,
     },

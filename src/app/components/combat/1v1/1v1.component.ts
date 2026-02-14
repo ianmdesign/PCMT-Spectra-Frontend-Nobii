@@ -63,45 +63,53 @@ export class OneVersusOneComponent implements OnInit {
     isOneVersusOne = computed(() => this.oneVersusOneTriggered());
 
     leftPlayer = computed(() => {
-        // Return stored player if 1v1 is active, otherwise return current alive player
         if (this.isOneVersusOne()) {
-            return this.storedLeftPlayer();
+            const index = this.storedLeftPlayerIndex();
+            return this.dataModel.teams()[0]?.players[index] || null;
         }
         return this.dataModel.teams()[0]?.players.find((p: any) => p.isAlive) || null;
     });
 
     rightPlayer = computed(() => {
-        // Return stored player if 1v1 is active, otherwise return current alive player
         if (this.isOneVersusOne()) {
-            return this.storedRightPlayer();
+            const index = this.storedRightPlayerIndex();
+            return this.dataModel.teams()[1]?.players[index] || null;
         }
         return this.dataModel.teams()[1]?.players.find((p: any) => p.isAlive) || null;
     });
 
-    // Get animation class based on player position
-    // Player list uses justify-end with gap-6, index 0 is at top
-    // Cards should animate to the first (top) position
-    // Player card height is ~82vh units + gap of 24px (~6 tailwind units)
     leftPlayerAnimationClass = computed(() => {
         const index = this.storedLeftPlayerIndex();
         if (index === 0) {
-            return 'animate-1v1-stay'; // First player stays in place
+            return 'animate-1v1-stay'; 
         }
-        // Return class based on slot position
         return `animate-1v1-from-slot-${index}`;
     });
 
     rightPlayerAnimationClass = computed(() => {
         const index = this.storedRightPlayerIndex();
         if (index === 0) {
-            return 'animate-1v1-stay'; // First player stays in place
+            return 'animate-1v1-stay';
         }
-        // Return class based on slot position
         return `animate-1v1-from-slot-${index}`;
     });
 
     leftTeam = computed(() => this.dataModel.teams()[0]);
     rightTeam = computed(() => this.dataModel.teams()[1]);
+
+    leftTeamDeadPlayers = computed(() => {
+        const team = this.leftTeam();
+        if (!team) return [];
+        const oneVsOnePlayer = this.leftPlayer();
+        return team.players.filter((p: any) => !p.isAlive && p.fullName !== oneVsOnePlayer?.fullName);
+    });
+
+    rightTeamDeadPlayers = computed(() => {
+        const team = this.rightTeam();
+        if (!team) return [];
+        const oneVsOnePlayer = this.rightPlayer();
+        return team.players.filter((p: any) => !p.isAlive && p.fullName !== oneVsOnePlayer?.fullName);
+    });
 
     // Check if playercams should be shown for both players in the 1v1
     shouldShowPlayercams = computed(() => {

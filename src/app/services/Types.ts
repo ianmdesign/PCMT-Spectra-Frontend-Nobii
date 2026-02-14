@@ -83,6 +83,7 @@ export interface ITimeoutState {
 }
 
 export interface ITimeoutCounter {
+  max: number;
   left: number;
   right: number;
 }

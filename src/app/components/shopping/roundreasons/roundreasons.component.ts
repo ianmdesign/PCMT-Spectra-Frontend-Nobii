@@ -176,10 +176,6 @@ export class RoundreasonsComponent {
       if (squareIndex === 1) return adjustedCount >= 2; // Bottom square (consumed first)
     }
     
-    // Fill pattern based on current timeout count (bottom-up consumption):
-    // 2 timeouts: top=filled, bottom=filled [■, ■]  
-    // 1 timeout:  top=filled, bottom=empty  [■, □] (bottom consumed first)
-    // 0 timeouts: top=empty,  bottom=empty  [□, □]
     if (squareIndex === 0) return timeoutCount >= 1; // Top square (consumed last)  
     if (squareIndex === 1) return timeoutCount >= 2; // Bottom square (consumed first)
     
