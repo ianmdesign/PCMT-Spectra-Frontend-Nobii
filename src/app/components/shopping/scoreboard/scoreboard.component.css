@@ -30,11 +30,11 @@
 }
 
 .animate-scoreboard-in {
-  animation: animations-scoreboard 0.10s reverse ease-in-out;
+  animation: animations-scoreboard 0.1s reverse ease-in-out;
   will-change: opacity, transform;
 }
 
 .animate-scoreboard-out {
-  animation: animations-scoreboard 0.10s ease-in-out;
+  animation: animations-scoreboard 0.1s ease-in-out;
   will-change: opacity, transform;
 }

@@ -61,25 +61,33 @@
 
 /* Round reason squares */
 .attacker-round-won {
-  background-color: color-mix(in srgb, var(--color-attacker-roundReasons) 74%, transparent) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--color-attacker-roundReasons) 74%,
+    transparent
+  ) !important;
   border-color: color-mix(in srgb, var(--color-attacker-primary) 20%, transparent) !important;
 }
 
 .defender-round-won {
-  background-color: color-mix(in srgb, var(--color-defender-roundReasons) 74%, transparent) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--color-defender-roundReasons) 74%,
+    transparent
+  ) !important;
   border-color: color-mix(in srgb, var(--color-defender-primary) 20%, transparent) !important;
 }
 
 /* Timeout square blinking animation */
 @keyframes timeout-blink {
   0% {
-    background-color: #6E7D84;
+    background-color: #6e7d84;
   }
   50% {
     background-color: transparent;
   }
   100% {
-    background-color: #6E7D84;
+    background-color: #6e7d84;
   }
 }
 
@@ -89,7 +97,7 @@
 
 @keyframes current-round-pulse {
   0% {
-    opacity: 1
+    opacity: 1;
   }
   50% {
     opacity: 0.6;

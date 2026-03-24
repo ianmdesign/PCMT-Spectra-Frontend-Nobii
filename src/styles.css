@@ -29,11 +29,11 @@
 }
 @font-face {
   font-family: "Replica";
-  src: url("/assets/fonts/Replica/Replica-Bold.ttf") format("truetype"),
+  src: url("/assets/fonts/Replica/Replica-Bold.ttf") format("truetype");
 }
 @font-face {
   font-family: "Tungsten";
-  src: url("/assets/fonts/Tungsten/Tungsten-Bold.ttf") format("truetype"),
+  src: url("/assets/fonts/Tungsten/Tungsten-Bold.ttf") format("truetype");
 }
 
 @import "tailwindcss";
@@ -47,21 +47,24 @@
   );
   --color-timer: #0f1923;
   --color-background: #0f1923cc;
-  --color-credits-negative: #EADEAE;
+  --color-credits-negative: #eadeae;
 
-  --color-defender-primary: #21FEC5;
+  --color-defender-primary: #21fec5;
   --color-defender-secondary: #61eab6;
-  --color-defender-healthbarAccent: #0F3F32;
+  --color-defender-healthbarAccent: #0f3f32;
   --color-defender-shield: #61eab6;
-  --color-defender-scoreboard: #1FFEC1;
-  --color-defender-roundReasons: #0B100F;
+  --color-defender-scoreboard: #1ffec1;
+  --color-defender-roundReasons: #0b100f;
 
-  --color-attacker-primary: #FD4756;
+  --color-attacker-primary: #fd4756;
   --color-attacker-secondary: #ff4557;
-  --color-attacker-healthbarAccent: #3C0D11;
+  --color-attacker-healthbarAccent: #3c0d11;
   --color-attacker-shield: #ff838f;
-  --color-attacker-scoreboard: #FF1E31;
-  --color-attacker-roundReasons: #1D1414;
+  --color-attacker-scoreboard: #ff1e31;
+  --color-attacker-roundReasons: #1d1414;
+
+  --color-postmatch-primary: #ae2a2a;
+  --color-postmatch-secondary: #ffd075;
 }
 
 @utility font-montserrat {
@@ -126,6 +129,10 @@
   position: absolute;
   left: calc((--value(integer) / 1920) * 100vw);
 }
+@utility pos-y-bottom {
+  position: absolute;
+  bottom: 0;
+}
 @utility pos-y-* {
   position: absolute;
   top: calc((--value(integer) / 1080) * 100vh);
@@ -177,6 +184,7 @@ body {
 }
 
 :root {
+  --color-timer-rgb: 15, 25, 35; /* matches --color-timer: #0f1923 */
   --light: #ffffff;
   --dark: #000000;
   --less-dark: #0f0f0f;

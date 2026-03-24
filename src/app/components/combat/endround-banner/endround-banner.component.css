@@ -208,7 +208,6 @@
   }
 }
 
-
 .tournament-icon-flash {
   opacity: 0;
 }
@@ -249,4 +248,3 @@
 .reveal-background {
   animation: reveal 10ms ease-out 550ms forwards;
 }
-

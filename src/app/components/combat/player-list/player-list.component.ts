@@ -1,9 +1,10 @@
-import { Component, computed, effect, inject, signal } from "@angular/core";
+import { Component, computed, inject } from "@angular/core";
 import {
   PlayerCombatCardComponent,
   PlayerCombatCardMinimalComponent,
 } from "../player-combat-card/player-combat-card.component";
 import { DataModelService } from "../../../services/dataModel.service";
+import { OneVersusOneService } from "../../../services/1v1.service";
 
 @Component({
   selector: "app-combat-tracker",
@@ -14,37 +15,12 @@ import { DataModelService } from "../../../services/dataModel.service";
 export class CombatPlayerListComponent {
   dataModel = inject(DataModelService);
 
-  private lastRoundNumber = signal<number>(-1);
-  private oneVersusOneTriggered = signal<boolean>(false);
+  readonly oneVsOneService = inject(OneVersusOneService);
 
-  constructor() {
-    // Effect to track round changes and 1v1 state
-    effect(() => {
-      const currentRound = this.dataModel.match().roundNumber;
-      const previousRound = this.lastRoundNumber();
-
-      // Reset 1v1 state when round changes
-      if (currentRound !== previousRound) {
-        this.oneVersusOneTriggered.set(false);
-        this.lastRoundNumber.set(currentRound);
-      }
-
-      // Check if 1v1 condition is met
-      const teams = this.dataModel.teams();
-      const aliveLeft = teams[0].players.filter((p: any) => p.isAlive).length;
-      const aliveRight = teams[1].players.filter((p: any) => p.isAlive).length;
-
-      if (aliveLeft === 1 && aliveRight === 1) {
-        this.oneVersusOneTriggered.set(true);
-      }
-    });
-  }
-
-  isOneVersusOne = computed(() => this.oneVersusOneTriggered());
+  isOneVersusOne = computed(() => this.oneVsOneService.isOneVersusOne());
 
   isShown = computed(() => {
-    const rightPhase = this.dataModel.match().roundPhase !== "shopping";
-    const not1v1 = !this.isOneVersusOne();
-    return rightPhase && not1v1;
+    if (this.dataModel.match().roundPhase == "shopping") return false;
+    return !this.isOneVersusOne();
   });
 }

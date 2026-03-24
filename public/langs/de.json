@@ -3,6 +3,11 @@
   "deaths": "Tode",
   "assists": "Assists",
   "endround.round_win": "RUNDE GEWONNEN",
+  "endround.roundAce": "ASS",
+  "endround.roundTeamAce": "TEAM-ASS",
+  "endround.roundClutch": "KNAPP",
+  "endround.roundFlawless": "MARKELLOS",
+  "endround.roundThrifty": "SPARSAM",
   "endround.win": "{{team}} GEWINNEN",
   "endround.attacker": "ANGREIFER",
   "endround.defender": "VERTEIDIGER",
@@ -17,5 +22,5 @@
   "team.defender": "VERTEIDIGER",
   "scoreboard.spent": "DIESE RUNDE AUSGEGEBEN",
   "timeout.technical_pause": "TECHNISCHE PAUSE",
-  "timeout.tactical_timeout": "TAKTISCHE PAUSE"
+  "timeout.tactical_timeout": "PAUSE"
 }

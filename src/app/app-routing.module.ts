@@ -48,6 +48,20 @@ const routes: Routes = [
         path: "agent-select",
         component: TestingAgentSelectComponent,
       },
+      {
+        path: "team-breakdown",
+        loadComponent: () =>
+          import("./overlays/testing-team-breakdown/testing-team-breakdown").then(
+            (m) => m.TestingTeamBreakdown,
+          ),
+      },
+      {
+        path: "map-breakdown",
+        loadComponent: () =>
+          import("./overlays/testing-map-breakdown/testing-map-breakdown").then(
+            (m) => m.TestingMapBreakdown,
+          ),
+      },
     ],
   },
   {
@@ -76,7 +90,30 @@ const routes: Routes = [
   },
   {
     path: "mapban",
-    component: MapbanUiComponent,
+    loadComponent: () =>
+      import("./overlays/mapban-overlay/mapban-overlay.component").then((m) => m.MapbanUiComponent),
+  },
+  {
+    path: "playercams",
+    loadComponent: () =>
+      import("./components/combat/playercams/playercams.component").then(
+        (m) => m.PlayercamsComponent,
+      ),
+  },
+  {
+    path: "team-breakdown",
+    loadComponent: () =>
+      import("./overlays/team-breakdown/team-breakdown").then((m) => m.TeamBreakdown),
+  },
+  {
+    path: "map-breakdown",
+    loadComponent: () =>
+      import("./overlays/map-breakdown/map-breakdown").then((m) => m.MapBreakdown),
+  },
+  {
+    path: "toast",
+    loadComponent: () =>
+      import("./overlays/toast-overlay/toast-component").then((m) => m.LiveToastComponent),
   },
 ];
 

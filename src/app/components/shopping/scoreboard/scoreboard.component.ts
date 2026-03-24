@@ -21,7 +21,7 @@ export class ScoreboardComponent {
 
   // sort player list by KDA
   sortedTeams = computed(() => {
-    return this.dataModel.teams().map(team => ({
+    return this.dataModel.teams().map((team) => ({
       ...team,
       players: [...team.players].sort((a, b) => {
         if (a.kills !== b.kills) {
@@ -30,9 +30,9 @@ export class ScoreboardComponent {
         if (a.deaths !== b.deaths) {
           return a.deaths - b.deaths;
         }
-        
+
         return b.assists - a.assists;
-      })
+      }),
     }));
   });
 }

@@ -1,21 +1,21 @@
 import { Component, inject, OnInit, signal } from "@angular/core";
 import { MatchOverlayComponent } from "../match-overlay/match-overlay.component";
-import { DataModelService } from "../../services/dataModel.service";
+import { DataModelService, initialMatchData } from "../../services/dataModel.service";
+import { IMatchData } from "../../services/Types";
+import { LiveToastComponent } from "../toast-overlay/toast-component";
 
 @Component({
   selector: "app-testing-new",
-  imports: [MatchOverlayComponent],
+  imports: [MatchOverlayComponent, LiveToastComponent],
   templateUrl: "./testing.component.html",
   styleUrl: "./testing.component.css",
 })
 export class TestingComponent implements OnInit {
   dataModel = inject(DataModelService);
-  match: any;
+  private toastTimerRef?: ReturnType<typeof setTimeout>;
+  match: IMatchData = initialMatchData;
 
   ngOnInit(): void {
-    const nameOverrideMap = new Map<string, string>();
-    nameOverrideMap.set("", "");
-
     this.match = {
       groupCode: "A",
       isRanked: false,
@@ -26,6 +26,7 @@ export class TestingComponent implements OnInit {
       map: "Ascent",
       switchRound: 12,
       firstOtRound: 25,
+      attackersWon: false,
       showAliveKDA: true,
       tools: {
         seriesInfo: {
@@ -61,13 +62,13 @@ export class TestingComponent implements OnInit {
           right: "Group B",
         },
         tournamentInfo: {
-          enabled: true,
           name: "",
           logoUrl: "",
           backdropUrl: "",
         },
         timeoutDuration: 60,
         timeoutCounter: {
+          max: 2,
           left: 2,
           right: 2,
         },
@@ -82,12 +83,23 @@ export class TestingComponent implements OnInit {
           customTextEnabled: true,
           spectraWatermark: true,
         },
-        playercamsInfo: { 
-        enable: true,
-        enabledPlayers: ["FNC OO AA EE#1337", "nobii#DEBUG"],
-        removeTricodes: false,
+        playercamsInfo: {
+          enable: true,
+          enabledPlayers: ["FNC OO AA EE#1337", "nobii#DEBUG"],
+          removeTricodes: false,
+        },
+        nameOverrides: { overrides: [] },
+        roundWinBox: {
+          type: "tournamentInfo",
+          sponsors: [],
+        },
       },
-        nameOverrides: { overrides: nameOverrideMap },
+      toastInfo: {
+        active: false,
+        duration: 10000,
+        message: "",
+        selectedTeam: "left",
+        eventLogoEnabled: true,
       },
       timeoutState: {
         techPause: false,
@@ -99,8 +111,8 @@ export class TestingComponent implements OnInit {
         {
           players: [
             {
-              name: "FNC OO AA EE",
-              fullName: "FNC OO AA EE#1337",
+              name: "MrFoxy",
+              fullName: "MrFoxy#prod",
               playerId: 0,
               isAlive: true,
               agentInternal: "Stealth",
@@ -124,6 +136,8 @@ export class TestingComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 1,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -131,10 +145,11 @@ export class TestingComponent implements OnInit {
                 ability2: 0,
               },
               iconNameSuffix: "",
+              locked: false,
             },
             {
-              name: "Twoperator",
-              fullName: "Twoperator#DEBUG",
+              name: "RedStone201",
+              fullName: "TTV RedStone201#uhhhh",
               playerId: 0,
               isAlive: true,
               agentInternal: "Smonk",
@@ -158,6 +173,8 @@ export class TestingComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 0,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -165,6 +182,7 @@ export class TestingComponent implements OnInit {
                 ability2: 0,
               },
               iconNameSuffix: "",
+              locked: false,
             },
             {
               name: "ThreeOfLife",
@@ -192,6 +210,8 @@ export class TestingComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 1,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -199,6 +219,7 @@ export class TestingComponent implements OnInit {
                 ability2: 0,
               },
               iconNameSuffix: "",
+              locked: false,
             },
             {
               name: "Fourcefield",
@@ -226,6 +247,8 @@ export class TestingComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 0,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -233,13 +256,14 @@ export class TestingComponent implements OnInit {
                 ability2: 0,
               },
               iconNameSuffix: "",
+              locked: false,
             },
             {
               name: "FIVEbyFIVE",
               fullName: "FIVEbyFIVE#DEBUG",
               playerId: 0,
               isAlive: true,
-              agentInternal: "Wushu",
+              agentInternal: "Iris",
               isObserved: false,
               armorName: "Heavy",
               money: 2100,
@@ -260,6 +284,8 @@ export class TestingComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 0,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -267,6 +293,7 @@ export class TestingComponent implements OnInit {
                 ability2: 0,
               },
               iconNameSuffix: "",
+              locked: false,
             },
           ],
           teamName: "The Naturals",
@@ -336,6 +363,8 @@ export class TestingComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 0,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -343,6 +372,7 @@ export class TestingComponent implements OnInit {
                 ability2: 0,
               },
               iconNameSuffix: "",
+              locked: false,
             },
             {
               name: "BeeSting",
@@ -370,6 +400,8 @@ export class TestingComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 1,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -377,6 +409,7 @@ export class TestingComponent implements OnInit {
                 ability2: 0,
               },
               iconNameSuffix: "",
+              locked: false,
             },
             {
               name: "CowTipper",
@@ -404,6 +437,8 @@ export class TestingComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 1,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -411,6 +446,7 @@ export class TestingComponent implements OnInit {
                 ability2: 0,
               },
               iconNameSuffix: "",
+              locked: false,
             },
             {
               name: "DodoDaniel",
@@ -438,6 +474,8 @@ export class TestingComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 1,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -445,6 +483,7 @@ export class TestingComponent implements OnInit {
                 ability2: 0,
               },
               iconNameSuffix: "",
+              locked: false,
             },
             {
               name: "Eeliminator",
@@ -472,6 +511,8 @@ export class TestingComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 0,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -479,6 +520,7 @@ export class TestingComponent implements OnInit {
                 ability2: 0,
               },
               iconNameSuffix: "",
+              locked: false,
             },
           ],
           teamName: "The Zoologists",
@@ -537,6 +579,13 @@ export class TestingComponent implements OnInit {
         ret.roundPhase = "end";
       } else {
         ret.roundPhase = "shopping";
+        ret.teams.forEach((team) => {
+          team.players.forEach((player) => {
+            player.isAlive = true;
+            player.health = 100;
+            player.deathsThisRound = 0;
+          });
+        });
       }
       return ret;
     });
@@ -597,7 +646,7 @@ export class TestingComponent implements OnInit {
   techPause() {
     const currentState = this.dataModel.match().timeoutState;
     const isCurrentlyActive = currentState.techPause;
-    
+
     if (isCurrentlyActive) {
       // End tech pause
       this.stopTimeoutTimer();
@@ -617,23 +666,6 @@ export class TestingComponent implements OnInit {
   //#endregion
 
   //#region Team button handlers
-  addPlayer(teamIndex: number) {
-    this.dataModel.match.update((v) => {
-      const ret = v;
-      const team = ret.teams[teamIndex];
-
-      return ret;
-    });
-  }
-
-  removePlayer(teamIndex: number) {
-    this.dataModel.match.update((v) => {
-      const ret = v;
-      const team = ret.teams[teamIndex];
-
-      return ret;
-    });
-  }
 
   winRound(teamIndex: number) {
     this.dataModel.match.update((v) => {
@@ -650,16 +682,13 @@ export class TestingComponent implements OnInit {
     const currentState = this.dataModel.match().timeoutState;
     const isLeftActive = currentState.leftTeam;
     const isRightActive = currentState.rightTeam;
-    
-    if (
-      (teamIndex == 0 && isLeftActive) ||
-      (teamIndex == 1 && isRightActive)
-    ) {
+
+    if ((teamIndex == 0 && isLeftActive) || (teamIndex == 1 && isRightActive)) {
       // End the timeout for this team
       this.stopTimeoutTimer();
       return;
     }
-    
+
     // Start timeout for the team
     this.stopTimeoutTimer(); // Stop any existing timeout first
     this.dataModel.match.update((v) => {
@@ -680,6 +709,8 @@ export class TestingComponent implements OnInit {
       const ret = v;
       ret.teams[teamIndex].players[playerIndex].isAlive = false;
       ret.teams[teamIndex].players[playerIndex].health = 0;
+      ret.teams[teamIndex].players[playerIndex].deaths += 1;
+      ret.teams[teamIndex].players[playerIndex].deathsThisRound += 1;
       return ret;
     });
   }
@@ -807,5 +838,43 @@ export class TestingComponent implements OnInit {
       ret.timeoutState.timeRemaining = 0;
       return ret;
     });
+  }
+
+  showToast() {
+    const currentlyActive = this.dataModel.match().toastInfo.active;
+
+    if (currentlyActive) {
+      // Deactivate immediately (mimics pressing the hotkey again)
+      clearTimeout(this.toastTimerRef);
+      this.toastTimerRef = undefined;
+      this.dataModel.match.update((v) => {
+        const ret = v;
+        ret.toastInfo.active = false;
+        return ret;
+      });
+    } else {
+      // Activate
+      this.dataModel.match.update((v) => {
+        const ret = v;
+        ret.toastInfo.active = true;
+        ret.toastInfo.message = "This is a live toast preview. Thanks for using Spectra!";
+        ret.toastInfo.duration = null;
+        ret.toastInfo.eventLogoEnabled = true;
+        return ret;
+      });
+
+      const duration = this.dataModel.match().toastInfo.duration;
+      if (duration !== null) {
+        clearTimeout(this.toastTimerRef);
+        this.toastTimerRef = setTimeout(() => {
+          this.dataModel.match.update((v) => {
+            const ret = v;
+            ret.toastInfo.active = false;
+            return ret;
+          });
+          this.toastTimerRef = undefined;
+        }, duration);
+      }
+    }
   }
 }

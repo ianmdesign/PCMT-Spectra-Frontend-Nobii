@@ -7,6 +7,11 @@ export class AgentNameService {
   static getAgentName(agent: string) {
     return AgentName[agent as keyof typeof AgentName];
   }
+
+  static getAgentInternalName(agent: string) {
+    const entry = Object.entries(AgentName).find(([, value]) => value === agent);
+    return entry?.[0] || "";
+  }
 }
 
 enum AgentName {
@@ -21,6 +26,7 @@ enum AgentName {
   "Guide" = "Skye",
   "Gumshoe" = "Cypher",
   "Hunter" = "Sova",
+  "Iris" = "Miks",
   "Killjoy" = "Killjoy",
   "Mage" = "Harbor",
   "Nox" = "Vyse",

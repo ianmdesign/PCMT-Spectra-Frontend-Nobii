@@ -1,8 +1,8 @@
 {
   "name": "spectra-frontend",
-  "version": "0.2.43",
+  "version": "0.1.3",
   "author": {
-    "name": "Purple Shark UG (haftungsbeschränkt)",
+    "name": "Purple Shark UG (haftungsbeschränkt), nobii",
     "url": "https://valospectra.com"
   },
   "scripts": {

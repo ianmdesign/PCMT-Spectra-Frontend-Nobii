@@ -1,6 +1,6 @@
 @if (dataModel.sponsorInfo().enabled && dataModel.sponsorInfo().sponsors.length > 0) {
   <div
-    class="absolute top-0 -right-60 vw-245 vh-88 bg-no-repeat bg-left bg-cover"
+    class="vw-245 vh-88 absolute top-0 -right-60 bg-cover bg-left bg-no-repeat"
     [style.background-image]="'url(assets/topscore/sponsorBox.svg)'"
   >
     @for (sponsor of dataModel.sponsorInfo().sponsors; track $index) {
@@ -9,8 +9,6 @@
         [class.active]="currentIndex() === $index"
         [src]="sponsor"
         [alt]="'Sponsor ' + ($index + 1)"
-        (error)="onImageError($event, sponsor, $index)"
-        (load)="onImageLoad(sponsor, $index)"
       />
     }
   </div>

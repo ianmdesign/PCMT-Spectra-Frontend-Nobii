@@ -3,6 +3,11 @@
   "playercard.deaths": "Ölme",
   "playercard.assists": "Asist",
   "endround.round_win": "ZAFER",
+  "endround.roundAce": "BELA",
+  "endround.roundTeamAce": "BEŞLİ BELA",
+  "endround.roundClutch": "TEK TABANCA",
+  "endround.roundFlawless": "TERTEMİZ",
+  "endround.roundThrifty": "UCUZCU",
   "endround.win": "{{team}} ZAFER",
   "endround.attacker": "SALDIRI",
   "endround.defender": "SAVUNMA",
@@ -19,5 +24,5 @@
   "scoreboard.deaths": "Ölme",
   "scoreboard.assists": "Asist",
   "timeout.technical_pause": "TEKNİK DURAKLATMA",
-  "timeout.tactical_timeout": "TAKTİK DURAKLATMA"
+  "timeout.tactical_timeout": "DURAKLATMA"
 }

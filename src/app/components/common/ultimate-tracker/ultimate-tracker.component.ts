@@ -1,5 +1,15 @@
 import { Config } from "../../../shared/config";
-import { Component, Input, AfterViewInit, OnChanges, DoCheck, ViewChild, ElementRef, ChangeDetectorRef, OnDestroy } from "@angular/core";
+import {
+  Component,
+  Input,
+  AfterViewInit,
+  OnChanges,
+  DoCheck,
+  ViewChild,
+  ElementRef,
+  ChangeDetectorRef,
+  OnDestroy,
+} from "@angular/core";
 import { NgIf, NgFor, NgClass } from "@angular/common";
 
 @Component({
@@ -13,7 +23,7 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
   public readonly assets: string = "../../../assets";
 
   private _player: any;
-  private prevUltPoints: number = -1; // to track changes
+  private prevUltPoints = -1; // to track changes
 
   @Input()
   set player(val: any) {
@@ -34,11 +44,14 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
   @ViewChild("ultimateVideo", { static: true }) videoRef!: ElementRef<HTMLVideoElement>;
 
   private wasUltReady = false;
-  private videoEventListeners: Array<{ event: string; handler: EventListener }> = [];
+  private videoEventListeners: { event: string; handler: EventListener }[] = [];
   private animationFrameId?: number;
   private isDestroyed = false;
 
-  constructor(public config: Config, private cdRef: ChangeDetectorRef) {}
+  constructor(
+    public config: Config,
+    private cdRef: ChangeDetectorRef,
+  ) {}
 
   ngOnDestroy(): void {
     this.isDestroyed = true;
@@ -69,13 +82,15 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
   public get dashes(): { collected: boolean; angle: number }[] {
     const dashSpan = (2 * Math.PI) / this.player.maxUltPoints;
     return Array.from({ length: this.player.maxUltPoints }, (_, i) => ({
-        collected: i < this.player.currUltPoints,
-        angle: i * dashSpan - Math.PI / 2 + dashSpan / 2,
+      collected: i < this.player.currUltPoints,
+      angle: i * dashSpan - Math.PI / 2 + dashSpan / 2,
     }));
   }
 
   public computePath(angle: number): string {
-    const cx = 64, cy = 64, outerRadius = 18;
+    const cx = 64,
+      cy = 64,
+      outerRadius = 18;
     const dashSpan = (2 * Math.PI) / this.player.maxUltPoints;
     const adjustedSpan = dashSpan * 0.8;
     const startAngle = angle - adjustedSpan / 2;
@@ -93,7 +108,7 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
     outerRadius: number,
     angle: number,
     originalSpan: number,
-    collected: boolean
+    collected: boolean,
   ) {
     const dashCoverage = 0.8;
     const adjustedSpan = originalSpan * dashCoverage;
@@ -115,12 +130,7 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
     dash.setAttribute("d", pathData);
 
     // Use white for all collected dashes
-    dash.setAttribute(
-      "stroke",
-      collected
-        ? "#fff"
-        : "rgba(163, 163, 163, 0.5)"
-    );
+    dash.setAttribute("stroke", collected ? "#fff" : "rgba(163, 163, 163, 0.5)");
     dash.setAttribute("stroke-width", "3");
     dash.setAttribute("fill", "none");
     dash.setAttribute("stroke-linecap", "butt");
@@ -128,8 +138,11 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
     this.svgContainerRef.nativeElement.appendChild(dash);
   }
 
-  private lastRenderedState: { ultReady: boolean; currUltPoints: number; maxUltPoints: number } = 
-    { ultReady: false, currUltPoints: -1, maxUltPoints: -1 };
+  private lastRenderedState: { ultReady: boolean; currUltPoints: number; maxUltPoints: number } = {
+    ultReady: false,
+    currUltPoints: -1,
+    maxUltPoints: -1,
+  };
 
   private updateUltimateProgress(): void {
     if (!this.svgContainerRef || this.isDestroyed) {
@@ -140,7 +153,7 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
     const currentState = {
       ultReady: this.player?.ultReady || false,
       currUltPoints: this.player?.currUltPoints || 0,
-      maxUltPoints: this.player?.maxUltPoints || 0
+      maxUltPoints: this.player?.maxUltPoints || 0,
     };
 
     if (
@@ -162,13 +175,15 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
       if (this.isDestroyed) return;
 
       const svgContainer = this.svgContainerRef.nativeElement;
-      
+
       // More efficient cleanup - remove children instead of innerHTML
       while (svgContainer.firstChild) {
         svgContainer.removeChild(svgContainer.firstChild);
       }
 
-      const cx = 64, cy = 64, outerRadius = 18;
+      const cx = 64,
+        cy = 64,
+        outerRadius = 18;
 
       if (this.player.ultReady === true) {
         this.createUltimateReadyElements(svgContainer, cx, cy, outerRadius);
@@ -183,7 +198,12 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
     });
   }
 
-  private createUltimateReadyElements(svgContainer: SVGSVGElement, cx: number, cy: number, outerRadius: number): void {
+  private createUltimateReadyElements(
+    svgContainer: SVGSVGElement,
+    cx: number,
+    cy: number,
+    outerRadius: number,
+  ): void {
     const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
     const filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
     filter.setAttribute("id", "glow");
@@ -225,18 +245,16 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
     svgContainer.appendChild(glowingCircle);
   }
 
-  private createProgressElements(svgContainer: SVGSVGElement, cx: number, cy: number, outerRadius: number): void {
+  private createProgressElements(
+    svgContainer: SVGSVGElement,
+    cx: number,
+    cy: number,
+    outerRadius: number,
+  ): void {
     const dashSpan = (2 * Math.PI) / this.player.maxUltPoints;
     for (let i = 0; i < this.player.maxUltPoints; i++) {
       const angle = i * dashSpan - Math.PI / 2 + dashSpan / 2;
-      this.createDash(
-        cx,
-        cy,
-        outerRadius,
-        angle,
-        dashSpan,
-        i < this.player.currUltPoints,
-      );
+      this.createDash(cx, cy, outerRadius, angle, dashSpan, i < this.player.currUltPoints);
     }
   }
 
@@ -259,27 +277,27 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
   private preloadVideo(): void {
     if (this.videoRef?.nativeElement) {
       const video = this.videoRef.nativeElement;
-      
+
       // Clean up existing listeners first
       this.cleanupVideoEventListeners();
-      
+
       // Preload the video to eliminate delay
       video.load();
-      
+
       // Set up event listeners with proper cleanup tracking
       const loadedDataHandler = () => {
         if (!this.isDestroyed) {
-          console.log('Ultimate video preloaded successfully');
+          console.log("Ultimate video preloaded successfully");
           // If ultimate is ready when video loads, start playing
           if (this.player?.ultReady) {
             this.playVideoSafely();
           }
         }
       };
-      
+
       const errorHandler = (e: Event) => {
         if (!this.isDestroyed) {
-          console.warn('Ultimate video preload failed:', e);
+          console.warn("Ultimate video preload failed:", e);
         }
       };
 
@@ -302,27 +320,28 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
         }
       };
 
-      this.addVideoEventListener('loadeddata', loadedDataHandler);
-      this.addVideoEventListener('error', errorHandler);
-      this.addVideoEventListener('pause', pauseHandler);
-      this.addVideoEventListener('ended', endedHandler);
+      this.addVideoEventListener("loadeddata", loadedDataHandler);
+      this.addVideoEventListener("error", errorHandler);
+      this.addVideoEventListener("pause", pauseHandler);
+      this.addVideoEventListener("ended", endedHandler);
     }
   }
 
   private playVideoSafely(): void {
     if (!this.videoRef?.nativeElement || this.isDestroyed) return;
-    
+
     const video = this.videoRef.nativeElement;
-    
+
     try {
-      if (video.readyState >= 2) { // Video has loaded enough to play
+      if (video.readyState >= 2) {
+        // Video has loaded enough to play
         video.currentTime = 0;
         const playPromise = video.play();
-        
+
         if (playPromise !== undefined) {
-          playPromise.catch(e => {
+          playPromise.catch((e) => {
             if (!this.isDestroyed) {
-              console.warn('Video play failed:', e);
+              console.warn("Video play failed:", e);
             }
           });
         }
@@ -333,30 +352,30 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
             video.currentTime = 0;
             const playPromise = video.play();
             if (playPromise !== undefined) {
-              playPromise.catch(e => {
+              playPromise.catch((e) => {
                 if (!this.isDestroyed) {
-                  console.warn('Video play failed:', e);
+                  console.warn("Video play failed:", e);
                 }
               });
             }
           }
         };
-        
-        video.addEventListener('canplay', canplayHandler, { once: true });
+
+        video.addEventListener("canplay", canplayHandler, { once: true });
       }
     } catch (error) {
       if (!this.isDestroyed) {
-        console.warn('Video play error:', error);
+        console.warn("Video play error:", error);
       }
     }
   }
 
   private handleUltimateStateChange(): void {
     if (!this.videoRef?.nativeElement || this.isDestroyed) return;
-    
+
     const video = this.videoRef.nativeElement;
     const isUltReady = this.player?.ultReady;
-    
+
     if (isUltReady && !this.wasUltReady) {
       // Ultimate just became ready - start playing
       this.playVideoSafely();
@@ -367,11 +386,11 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
         video.currentTime = 0;
       } catch (error) {
         if (!this.isDestroyed) {
-          console.warn('Video pause error:', error);
+          console.warn("Video pause error:", error);
         }
       }
     }
-    
+
     this.wasUltReady = isUltReady;
   }
 }
