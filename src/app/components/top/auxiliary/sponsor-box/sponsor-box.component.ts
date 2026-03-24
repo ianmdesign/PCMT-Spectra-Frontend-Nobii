@@ -1,4 +1,7 @@
-import { Component, inject, OnDestroy, signal, effect, computed } from "@angular/core";
+import { Component, inject, OnDestroy, signal } from "@angular/core";
+import { toObservable } from "@angular/core/rxjs-interop";
+import { distinctUntilChanged, EMPTY, interval, switchMap } from "rxjs";
+import { Subscription } from "rxjs";
 import { DataModelService } from "../../../../services/dataModel.service";
 
 @Component({
@@ -11,73 +14,28 @@ export class SponsorBoxComponent implements OnDestroy {
   dataModel = inject(DataModelService);
 
   currentIndex = signal(0);
-  private intervalId?: number;
-
-  // Create a computed signal to track only the relevant sponsor config
-  private sponsorConfig = computed(() => {
-    const info = this.dataModel.sponsorInfo();
-    return {
-      enabled: info.enabled,
-      duration: info.duration,
-      sponsorCount: info.sponsors?.length || 0,
-    };
-  });
+  private sub?: Subscription;
 
   constructor() {
-    // Set up reactive sponsor rotation using effect
-    effect(() => {
-      // Read the computed config to track changes
-      const config = this.sponsorConfig();
-      this.setupSponsorRotation();
+    this.sub = toObservable(this.dataModel.sponsorInfo).pipe(
+      distinctUntilChanged((a, b) =>
+        a.enabled === b.enabled &&
+        a.duration === b.duration &&
+        a.sponsors.length === b.sponsors.length &&
+        a.sponsors.every((s, i) => s === b.sponsors[i])
+      ),
+      switchMap((sponsorInfo) => {
+        this.currentIndex.set(0);
+        if (!sponsorInfo.enabled || sponsorInfo.sponsors.length <= 1) return EMPTY;
+        const duration = sponsorInfo.duration > 100 ? sponsorInfo.duration : sponsorInfo.duration * 1000;
+        return interval(duration);
+      })
+    ).subscribe(() => {
+      this.currentIndex.update((i) => (i + 1) % this.dataModel.sponsorInfo().sponsors.length);
     });
   }
 
   ngOnDestroy(): void {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-    }
-  }
-
-  private setupSponsorRotation(): void {
-    const sponsorInfo = this.dataModel.sponsorInfo();
-    
-    // Clear any existing interval
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-      this.intervalId = undefined;
-    }
-
-    // Reset to first index when sponsors change
-    this.currentIndex.set(0);
-    
-    // Check if sponsors exist and are enabled
-    if (!sponsorInfo.enabled || !sponsorInfo.sponsors || sponsorInfo.sponsors.length === 0) {
-      return;
-    }
-
-    // Ensure duration is valid (convert to milliseconds if needed)
-    const duration = sponsorInfo.duration > 100 ? sponsorInfo.duration : sponsorInfo.duration * 1000;
-    
-    if (duration <= 0) {
-      console.warn('Sponsor box: Invalid duration:', sponsorInfo.duration);
-      return;
-    }
-
-    const sponsorCount = sponsorInfo.sponsors.length;
-
-    // Only start rotation if there are multiple sponsors
-    if (sponsorCount > 1) {
-      this.intervalId = window.setInterval(() => {
-        this.currentIndex.update((i) => (i + 1) % sponsorCount);
-      }, duration);
-    }
-  }
-
-  onImageError(event: Event, sponsorUrl: string, index: number): void {
-    console.error(`Sponsor image failed to load: ${sponsorUrl} (index: ${index})`, event);
-  }
-
-  onImageLoad(sponsorUrl: string, index: number): void {
-    console.log(`Sponsor image loaded successfully: ${sponsorUrl} (index: ${index})`);
+    this.sub?.unsubscribe();
   }
 }

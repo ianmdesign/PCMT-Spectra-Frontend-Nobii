@@ -51,7 +51,7 @@ export class TimeoutComponent {
 
   hideAnimationEffect = effect(() => {
     const hideState = this.shouldHide();
-    
+
     if (hideState) {
       // Hiding - trigger out animation
       this.outAnimation = true;

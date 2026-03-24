@@ -35,7 +35,7 @@ export class PlayerScoreboardCardComponent {
   }
 
   getTeamColor(): string {
-    return this.color() === 'attacker' ? '#ff4557' : '#21fec2';
+    return this.color() === "attacker" ? "#ff4557" : "#21fec2";
   }
 
   formatNumber(number: number): string {
@@ -44,7 +44,7 @@ export class PlayerScoreboardCardComponent {
 
   private static idCounter = 0;
   private _uniqueId?: string;
-  
+
   get uniqueId(): string {
     if (!this._uniqueId) {
       PlayerScoreboardCardComponent.idCounter++;

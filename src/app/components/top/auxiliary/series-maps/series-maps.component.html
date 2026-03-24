@@ -7,18 +7,30 @@
         @switch (mapInfo.type) {
           @case ("past") {
             <p>{{ mapInfo.map }}</p>
-            <img [src]="mapInfo.left.logo" class="w-4.5 h-4.5 px-1.5 py-0.5 align-middle ml-1 object-contain" />
+            <img
+              [src]="mapInfo.left.logo"
+              class="ml-1 h-4.5 w-4.5 object-contain px-1.5 py-0.5 align-middle"
+            />
             <p>{{ mapInfo.left.score }} - {{ mapInfo.right.score }}</p>
-            <img [src]="mapInfo.right.logo" class="w-4.5 h-4.5 px-1.5 py-0.5 align-middle ml-1 object-contain" />
+            <img
+              [src]="mapInfo.right.logo"
+              class="ml-1 h-4.5 w-4.5 object-contain px-1.5 py-0.5 align-middle"
+            />
           }
           @case ("present") {
             {{ TranslateKeys.Mapinfo_Live | translate: { map: dataModel.match().map } }}
-            <img [src]="mapInfo.logo" class="w-4.5 h-4.5 px-1.5 py-0.5 align-middle ml-1 object-contain" />
+            <img
+              [src]="mapInfo.logo"
+              class="ml-1 h-4.5 w-4.5 object-contain px-1.5 py-0.5 align-middle"
+            />
           }
           @case ("future") {
             @if (mapInfo.logo !== "") {
               {{ TranslateKeys.Mapinfo_Next | translate: { map: mapInfo.map } }}
-              <img [src]="mapInfo.logo" class="w-4.5 h-4.5 px-1.5 py-0.5 align-middle ml-1 object-contain" />
+              <img
+                [src]="mapInfo.logo"
+                class="ml-1 h-4.5 w-4.5 object-contain px-1.5 py-0.5 align-middle"
+              />
             } @else {
               {{ TranslateKeys.Mapinfo_Decider | translate: { map: mapInfo.map } }}
             }

@@ -1,4 +1,4 @@
-import { Component, effect, inject, OnInit } from "@angular/core";
+import { Component, inject, OnInit } from "@angular/core";
 import { AgentSelectOverlayComponent } from "../agent-select-overlay/agent-select-overlay.component";
 import { DataModelService } from "../../services/dataModel.service";
 import { IMatchData } from "../../services/Types";
@@ -59,7 +59,6 @@ export class TestingAgentSelectComponent implements OnInit {
           right: "Group B",
         },
         tournamentInfo: {
-          enabled: true,
           name: "",
           logoUrl: "",
           backdropUrl: "",
@@ -87,6 +86,16 @@ export class TestingAgentSelectComponent implements OnInit {
         nameOverrides: {
           overrides: [],
         },
+        roundWinBox: {
+          type: "tournamentInfo",
+          sponsors: [],
+        },
+      },
+      toastInfo: {
+        active: false,
+        duration: 10000,
+        message: "",
+        eventLogoEnabled: true,
       },
       timeoutState: {
         techPause: false,
@@ -124,6 +133,8 @@ export class TestingAgentSelectComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 0,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -159,6 +170,8 @@ export class TestingAgentSelectComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 0,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -194,6 +207,8 @@ export class TestingAgentSelectComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 0,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -229,6 +244,8 @@ export class TestingAgentSelectComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 0,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -264,6 +281,8 @@ export class TestingAgentSelectComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 0,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -337,6 +356,8 @@ export class TestingAgentSelectComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 0,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -372,6 +393,8 @@ export class TestingAgentSelectComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 0,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -407,6 +430,8 @@ export class TestingAgentSelectComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 0,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -442,6 +467,8 @@ export class TestingAgentSelectComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 0,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -477,6 +504,8 @@ export class TestingAgentSelectComponent implements OnInit {
               deaths: 0,
               assists: 0,
               killsThisRound: 0,
+              deathsThisRound: 0,
+              killedPlayerNames: [],
               health: 100,
               abilities: {
                 grenade: 1,
@@ -556,6 +585,7 @@ export class TestingAgentSelectComponent implements OnInit {
     "Guide",
     "Gumshoe",
     "Hunter",
+    "Iris",
     "Killjoy",
     "Mage",
     "Nox",

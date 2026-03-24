@@ -14,11 +14,8 @@
 
   <!-- playername container -->
   <div
-    class="vw-180 relative flex flex-col items-start "
-    [class]="[
-      playerinfoBackgroundClass(),
-      right() ? 'rounded-tr-md' : 'rounded-tl-md',
-    ]"
+    class="vw-180 relative flex flex-col items-start"
+    [class]="[playerinfoBackgroundClass(), right() ? 'rounded-tr-md' : 'rounded-tl-md']"
     [class.!items-end]="right()"
   >
     <div class="h-full w-full">

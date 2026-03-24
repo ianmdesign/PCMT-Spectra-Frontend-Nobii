@@ -54,7 +54,7 @@ export class SpikePlantedComponent {
 
   protected timeoutFunction(durationLeft: number, lastTimeout: number) {
     this.blinkState = !this.blinkState;
-    
+
     this.triggerPulse();
 
     const now = Date.now();
@@ -87,9 +87,9 @@ export class SpikePlantedComponent {
 
   protected triggerPulse() {
     clearTimeout(this.pulseTimerRef);
-    
+
     this.pulseState = true;
-    
+
     this.pulseTimerRef = setTimeout(() => {
       this.pulseState = false;
     }, 200);

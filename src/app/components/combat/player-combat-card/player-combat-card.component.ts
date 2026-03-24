@@ -71,7 +71,7 @@ export class PlayerCombatCardComponent implements OnChanges {
 
   private static idCounter = 0;
   private _uniqueId?: string;
-  
+
   get uniqueId(): string {
     if (!this._uniqueId) {
       PlayerCombatCardComponent.idCounter++;

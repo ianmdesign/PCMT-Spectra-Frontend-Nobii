@@ -1,6 +1,4 @@
-<div
-  class="vw-1920 vh-520 flex flex-row justify-between"
->
+<div class="vw-1920 vh-520 flex flex-row justify-between">
   @for (team of dataModel.teams(); track $index; let tIdx = $index) {
     <div class="flex flex-col justify-end gap-6">
       @for (player of team.players; track $index) {

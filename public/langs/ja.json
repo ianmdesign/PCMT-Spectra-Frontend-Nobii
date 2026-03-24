@@ -3,6 +3,11 @@
   "playercard.deaths": "Death",
   "playercard.assists": "Assist",
   "endround.round_win": "ROUND WIN",
+  "endround.roundAce": "ACE",
+  "endround.roundTeamAce": "TEAM ACE",
+  "endround.roundClutch": "CLUTCH",
+  "endround.roundFlawless": "PERFECT",
+  "endround.roundThrifty": "THRIFTY",
   "endround.win": "{{team}} WIN",
   "endround.attacker": "アタッカー",
   "endround.defender": "ディフェンダー",
@@ -18,6 +23,6 @@
   "scoreboard.kills": "Kill",
   "scoreboard.deaths": "Death",
   "scoreboard.assists": "Assist",
-  "timeout.technical_pause": "TECH PAUSE",
+  "timeout.technical_pause": "TECHNICAL PAUSE",
   "timeout.tactical_timeout": "タイムアウト"
 }

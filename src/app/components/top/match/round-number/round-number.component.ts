@@ -13,5 +13,7 @@ export class RoundNumberComponent {
   dataModel = inject(DataModelService);
   TranslateKeys = TranslateKeys;
 
-  isOvertime = computed(() => this.dataModel.match().roundNumber >= this.dataModel.match().firstOtRound);
+  isOvertime = computed(
+    () => this.dataModel.match().roundNumber >= this.dataModel.match().firstOtRound,
+  );
 }
