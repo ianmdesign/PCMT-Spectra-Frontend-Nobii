@@ -17,22 +17,26 @@ export class SponsorBoxComponent implements OnDestroy {
   private sub?: Subscription;
 
   constructor() {
-    this.sub = toObservable(this.dataModel.sponsorInfo).pipe(
-      distinctUntilChanged((a, b) =>
-        a.enabled === b.enabled &&
-        a.duration === b.duration &&
-        a.sponsors.length === b.sponsors.length &&
-        a.sponsors.every((s, i) => s === b.sponsors[i])
-      ),
-      switchMap((sponsorInfo) => {
-        this.currentIndex.set(0);
-        if (!sponsorInfo.enabled || sponsorInfo.sponsors.length <= 1) return EMPTY;
-        const duration = sponsorInfo.duration > 100 ? sponsorInfo.duration : sponsorInfo.duration * 1000;
-        return interval(duration);
-      })
-    ).subscribe(() => {
-      this.currentIndex.update((i) => (i + 1) % this.dataModel.sponsorInfo().sponsors.length);
-    });
+    this.sub = toObservable(this.dataModel.sponsorInfo)
+      .pipe(
+        distinctUntilChanged(
+          (a, b) =>
+            a.enabled === b.enabled &&
+            a.duration === b.duration &&
+            a.sponsors.length === b.sponsors.length &&
+            a.sponsors.every((s, i) => s === b.sponsors[i]),
+        ),
+        switchMap((sponsorInfo) => {
+          this.currentIndex.set(0);
+          if (!sponsorInfo.enabled || sponsorInfo.sponsors.length <= 1) return EMPTY;
+          const duration =
+            sponsorInfo.duration > 100 ? sponsorInfo.duration : sponsorInfo.duration * 1000;
+          return interval(duration);
+        }),
+      )
+      .subscribe(() => {
+        this.currentIndex.update((i) => (i + 1) % this.dataModel.sponsorInfo().sponsors.length);
+      });
   }
 
   ngOnDestroy(): void {

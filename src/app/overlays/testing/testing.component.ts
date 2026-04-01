@@ -97,6 +97,7 @@ export class TestingComponent implements OnInit {
       toastInfo: {
         active: false,
         duration: 10000,
+        title: "",
         message: "",
         selectedTeam: "left",
         eventLogoEnabled: true,
@@ -857,7 +858,9 @@ export class TestingComponent implements OnInit {
       this.dataModel.match.update((v) => {
         const ret = v;
         ret.toastInfo.active = true;
+        ret.toastInfo.title = "";
         ret.toastInfo.message = "This is a live toast preview. Thanks for using Spectra!";
+        ret.toastInfo.selectedTeam = "left";
         ret.toastInfo.duration = null;
         ret.toastInfo.eventLogoEnabled = true;
         return ret;

@@ -9,6 +9,7 @@ import {
   ElementRef,
   ChangeDetectorRef,
   OnDestroy,
+  inject,
 } from "@angular/core";
 import { NgIf, NgFor, NgClass } from "@angular/common";
 
@@ -48,10 +49,8 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
   private animationFrameId?: number;
   private isDestroyed = false;
 
-  constructor(
-    public config: Config,
-    private cdRef: ChangeDetectorRef,
-  ) {}
+  public config = inject(Config);
+  private cdRef = inject(ChangeDetectorRef);
 
   ngOnDestroy(): void {
     this.isDestroyed = true;
@@ -302,7 +301,7 @@ export class UltimateComponent implements AfterViewInit, OnChanges, DoCheck, OnD
       };
 
       // Enhanced pause handler to prevent stuttering
-      const pauseHandler = (e: Event) => {
+      const pauseHandler = () => {
         if (!this.isDestroyed && this.player?.ultReady && !video.ended) {
           // Use requestAnimationFrame for better performance
           this.animationFrameId = requestAnimationFrame(() => {
