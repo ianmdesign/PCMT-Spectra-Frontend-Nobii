@@ -94,7 +94,9 @@ export class TestingAgentSelectComponent implements OnInit {
       toastInfo: {
         active: false,
         duration: 10000,
+        title: "",
         message: "",
+        selectedTeam: "none",
         eventLogoEnabled: true,
       },
       timeoutState: {

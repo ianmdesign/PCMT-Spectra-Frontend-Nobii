@@ -26,7 +26,8 @@ export class LiveToastComponent {
   cardCollapsing = false;
 
   hideEffect = effect(() => {
-    const active = this.dataModel.toastInfo().active;
+    const active =
+      this.dataModel.toastInfo().active && this.dataModel.match().roundPhase === "shopping";
 
     if (!active) {
       this.cardCollapsing = true;

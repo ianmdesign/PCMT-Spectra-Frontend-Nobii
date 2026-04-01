@@ -3,9 +3,9 @@
     <div
       class="absolute -top-2.5 z-0 h-full w-full"
       [class]="
-        dataModel.seriesInfo().needed == 2
+        dataModel.seriesInfo().needed === 2
           ? '-left-7'
-          : dataModel.seriesInfo().needed == 3
+          : dataModel.seriesInfo().needed === 3
             ? '-left-4'
             : '-left-1'
       "
@@ -42,9 +42,9 @@
     <div
       class="absolute -top-2.5 z-0 h-full w-full"
       [class]="
-        dataModel.seriesInfo().needed == 2
+        dataModel.seriesInfo().needed === 2
           ? '-right-60'
-          : dataModel.seriesInfo().needed == 3
+          : dataModel.seriesInfo().needed === 3
             ? '-right-63'
             : '-right-66'
       "
@@ -88,9 +88,9 @@
     }
     <div
       [class]="
-        dataModel.seriesInfo().needed == 2
+        dataModel.seriesInfo().needed === 2
           ? 'vw-212'
-          : dataModel.seriesInfo().needed == 3
+          : dataModel.seriesInfo().needed === 3
             ? 'vw-192'
             : 'vw-170'
       "

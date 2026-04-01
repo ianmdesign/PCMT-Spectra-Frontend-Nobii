@@ -60,7 +60,6 @@ export class RoundreasonsComponent {
     });
 
     effect(() => {
-      const timeoutCounter = this.dataModel.timeoutCounter();
       const cancelledAfterGrace = this.timeoutCancelledAfterGrace();
 
       if (cancelledAfterGrace.left || cancelledAfterGrace.right) {
@@ -197,9 +196,7 @@ export class RoundreasonsComponent {
     if (this.animatingTeam() !== teamIndex) return false;
 
     const startCounts = this.animationStartCounts();
-    const currentCounts = this.dataModel.timeoutCounter();
     const startCount = teamIndex === 0 ? startCounts.left : startCounts.right;
-    const currentCount = teamIndex === 0 ? currentCounts.left : currentCounts.right;
 
     // Animate the square that will be affected by this timeout
     // Consumption pattern: bottom-up (bottom consumed first, then top)
