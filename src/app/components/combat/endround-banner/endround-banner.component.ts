@@ -89,9 +89,6 @@ export class EndroundBannerComponent {
   }
 
   private calculateSponsor(): IRoundWinBoxSponsors {
-    const teamwon = this.teamWon();
-    const roundWonType = this.roundWonType();
-
     const initialSponsor: IRoundWinBoxSponsors = {
       wonTeam: "all",
       roundCeremonie: ["all"],
@@ -99,36 +96,44 @@ export class EndroundBannerComponent {
       backdropUrl: "",
     };
 
-    if (this.roundWinBox().sponsors.length == 0) return initialSponsor;
+    if (this.roundWinBox().type === "sponsors") {
+      const teamwon = this.teamWon();
+      const roundWonType = this.roundWonType();
 
-    const sponsor: IRoundWinBoxSponsors = this.roundWinBox().sponsors[0];
+      if (this.roundWinBox().sponsors.length == 0) return initialSponsor;
 
-    for (const spons of this.roundWinBox().sponsors) {
-      if (
-        spons.wonTeam == "all" ||
-        (spons.wonTeam == "left" && teamwon == 0) ||
-        (spons.wonTeam == "right" && teamwon == 1)
-      ) {
-        if (
-          spons.roundCeremonie.includes("all") ||
-          (spons.roundCeremonie.includes("normal") &&
-            roundWonType == TranslateKeys.Endround_RoundWin) ||
-          (spons.roundCeremonie.includes("ace") &&
-            roundWonType == TranslateKeys.Endround_RoundAce) ||
-          (spons.roundCeremonie.includes("clutch") &&
-            roundWonType == TranslateKeys.Endround_RoundClutch) ||
-          (spons.roundCeremonie.includes("teamAce") &&
-            roundWonType == TranslateKeys.Endround_RoundTeamAce) ||
-          (spons.roundCeremonie.includes("flawless") &&
-            roundWonType == TranslateKeys.Endround_RoundFlawless) ||
-          (spons.roundCeremonie.includes("thrifty") &&
-            roundWonType == TranslateKeys.Endround_RoundThrifty)
-        ) {
-          return spons;
+      const sponsor: IRoundWinBoxSponsors = this.roundWinBox().sponsors[0];
+
+      for (const spons of this.roundWinBox().sponsors) {
+        if (spons.roundCeremonie) {
+          if (
+            spons.wonTeam == "all" ||
+            (spons.wonTeam == "left" && teamwon == 0) ||
+            (spons.wonTeam == "right" && teamwon == 1)
+          ) {
+            if (
+              spons.roundCeremonie.includes("all") ||
+              (spons.roundCeremonie.includes("normal") &&
+                roundWonType == TranslateKeys.Endround_RoundWin) ||
+              (spons.roundCeremonie.includes("ace") &&
+                roundWonType == TranslateKeys.Endround_RoundAce) ||
+              (spons.roundCeremonie.includes("clutch") &&
+                roundWonType == TranslateKeys.Endround_RoundClutch) ||
+              (spons.roundCeremonie.includes("teamAce") &&
+                roundWonType == TranslateKeys.Endround_RoundTeamAce) ||
+              (spons.roundCeremonie.includes("flawless") &&
+                roundWonType == TranslateKeys.Endround_RoundFlawless) ||
+              (spons.roundCeremonie.includes("thrifty") &&
+                roundWonType == TranslateKeys.Endround_RoundThrifty)
+            ) {
+              return spons;
+            }
+          }
         }
       }
+      return sponsor;
     }
-    return sponsor;
+    return initialSponsor;
   }
 
   bannerBackgroundUrl = computed(() => {
