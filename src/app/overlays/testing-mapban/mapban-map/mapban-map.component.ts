@@ -14,11 +14,11 @@ import { SessionMap, ISessionTeam, Stage } from "../../../services/Types";
 @Component({
   standalone: true,
   imports: [MapbanBanIconComponent],
-  selector: "app-mapban-map",
+  selector: "app-mapban-testing-map",
   templateUrl: "./mapban-map.component.html",
   styleUrl: "./mapban-map.component.css",
 })
-export class MapbanMapComponent implements AfterViewInit, OnChanges {
+export class MapbanMapTestingComponent implements AfterViewInit, OnChanges {
   @Input({ required: true }) map!: SessionMap;
   @Input({ required: true }) availableMapNames!: string[];
   @Input({ required: true }) teams!: ISessionTeam[];
@@ -49,21 +49,6 @@ export class MapbanMapComponent implements AfterViewInit, OnChanges {
   playMapTranslate = false;
   previousMapName: string | undefined;
   playSidePicked = false;
-
-  get sidePickerTricode(): string {
-    if (this.sidePickedBy !== undefined && this.teams[this.sidePickedBy]) {
-      return this.teams[this.sidePickedBy].tricode;
-    }
-
-    if (this.map?.pickedBy !== undefined) {
-      const inferred = this.map.pickedBy === 0 ? 1 : 0;
-      if (this.teams[inferred]) {
-        return this.teams[inferred].tricode;
-      }
-    }
-
-    return "TEAM";
-  }
 
   ngAfterViewInit(): void {
     this.isInitialized = true;
@@ -155,9 +140,6 @@ export class MapbanMapComponent implements AfterViewInit, OnChanges {
     if (changes["map"] && changes["map"].currentValue) {
       const newMap: SessionMap = changes["map"] && changes["map"].currentValue;
 
-      // Reset and recompute per-map side picker on every incoming map object.
-      this.sidePickedBy = newMap.sidePickedBy;
-
       if (newMap.name && newMap.name !== "upcoming" && newMap.name !== this.previousMapName) {
         this.restartMapTranslate();
       }
@@ -191,10 +173,6 @@ export class MapbanMapComponent implements AfterViewInit, OnChanges {
       }
 
       if (newMap.pickedAttack !== undefined) {
-        if (this.sidePickedBy === undefined && newMap.pickedBy !== undefined) {
-          this.sidePickedBy = newMap.pickedBy === 0 ? 1 : 0;
-        }
-
         if (this.sideIsPicked == false) this.gotSidePicked();
         this.sideIsPicked = true;
       } else {

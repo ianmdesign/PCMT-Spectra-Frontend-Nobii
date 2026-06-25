@@ -16,7 +16,7 @@
   </div>
   @if ((isPicked || isDecider) && sideIsPicked) {
     <div class="absolute bottom-0 left-0 w-full bg-[#AE2A2A] flex items-center justify-center h-16" [class.animate-side-picked]="playSidePicked">
-      <span class="text-white font-replica text-lg uppercase text-center leading-6">{{ sidePickerTricode }} PICKS<br>{{ map.pickedAttack ? 'ATTACK' : 'DEFENSE' }}</span>
+      <span class="text-white font-replica text-lg uppercase text-center leading-6">{{ teams[sidePickedBy!].tricode }} PICKS<br>{{ map.pickedAttack ? 'ATTACK' : 'DEFENSE' }}</span>
     </div>
   }
 </div>

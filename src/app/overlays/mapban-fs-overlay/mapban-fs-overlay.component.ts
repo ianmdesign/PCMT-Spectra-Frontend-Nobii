@@ -4,7 +4,6 @@ import { MapbanFsComponent } from "../../components/mapban-fs/mapban-fs-componen
 import { SocketService } from "../../services/SocketService";
 import { IMapbanSessionData } from "../../services/Types";
 import { Config } from "../../shared/config";
-import { SessionMap } from "../mapban-overlay/mapban-overlay.component";
 
 @Component({
   standalone: true,

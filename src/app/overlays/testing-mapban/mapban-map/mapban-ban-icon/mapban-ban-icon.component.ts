@@ -12,13 +12,8 @@ export class MapbanBanIconComponent implements AfterViewInit {
   @Input({ required: true }) index!: number;
 
   ngAfterViewInit(): void {
-    const drawTarget = `#banIcon-${this.index}`;
-    if (!document.querySelector(drawTarget)) {
-      return;
-    }
-
     //#region Ban SVG
-    animate(svg.createDrawable(drawTarget), {
+    animate(svg.createDrawable("#banIcon-" + this.index), {
       draw: ["0 0", "0 1"],
       ease: eases.inOutQuad,
       duration: 1500,

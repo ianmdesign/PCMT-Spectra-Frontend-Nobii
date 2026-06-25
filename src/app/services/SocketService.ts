@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 import * as io from "socket.io-client";
-import { ISessionData } from "../overlays/mapban-overlay/mapban-overlay.component";
+import { IMapbanSessionData } from "./Types";
 
 export class SocketService {
   matchSocket!: io.Socket;
@@ -64,7 +64,7 @@ export class SocketService {
       reconnection: true,
     });
 
-    this.mapbanSocket.once("session_data", (data: ISessionData) => {
+    this.mapbanSocket.once("session_data", (data: IMapbanSessionData) => {
       console.log("Logged on successfully");
       this.mapbanSubscribers.forEach((subscriber) => subscriber({ event: "session_data", data }));
       this.mapbanSocket.onAny((event: string, ...args: any[]) => {

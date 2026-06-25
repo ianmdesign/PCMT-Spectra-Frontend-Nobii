@@ -3,10 +3,11 @@ import { MatchOverlayComponent } from "../match-overlay/match-overlay.component"
 import { DataModelService, initialMatchData } from "../../services/dataModel.service";
 import { IMatchData } from "../../services/Types";
 import { LiveToastComponent } from "../toast-overlay/toast-component";
+import { PlayercamsAltComponent } from "../../components/combat/playercams-alt/playercams-alt.component";
 
 @Component({
   selector: "app-testing-new",
-  imports: [MatchOverlayComponent, LiveToastComponent],
+  imports: [MatchOverlayComponent, LiveToastComponent, PlayercamsAltComponent],
   templateUrl: "./testing.component.html",
   styleUrl: "./testing.component.css",
 })
@@ -86,8 +87,10 @@ export class TestingComponent implements OnInit {
         },
         playercamsInfo: {
           enable: true,
-          enabledPlayers: [],
+          enabledPlayers: ["MrFoxy#DEBUG", "TTV RedStone201#DEBUG"],
           removeTricodes: false,
+          identifier: "SPPCEDVACI",
+          secret: "f5bE6fYn", 
         },
         nameOverrides: { overrides: [] },
         roundWinBox: {
