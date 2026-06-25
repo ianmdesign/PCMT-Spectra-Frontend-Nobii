@@ -13,7 +13,7 @@
 }
 
 .animate-slide-in.left {
-  animation: slide-in-left cubic-bezier(0.33, 1, 0.68, 1);
+  animation: slide-in-left cubic-bezier(0.66, 0, 0.236, 1);
   will-change: opacity;
 }
 
@@ -32,7 +32,7 @@
 }
 
 .animate-slide-out.left {
-  animation: slide-out-left cubic-bezier(0.32, 0, 0.67, 0);
+  animation: slide-out-left cubic-bezier(0.66, 0, 0.236, 1);
   will-change: opacity;
 }
 
@@ -51,7 +51,7 @@
 }
 
 .animate-slide-in.right {
-  animation: slide-in-right cubic-bezier(0.33, 1, 0.68, 1);
+  animation: slide-in-right cubic-bezier(0.66, 0, 0.236, 1);
   will-change: opacity;
 }
 
@@ -70,6 +70,6 @@
 }
 
 .animate-slide-out.right {
-  animation: slide-out-right cubic-bezier(0.32, 0, 0.67, 0);
+  animation: slide-out-right cubic-bezier(0.66, 0, 0.236, 1);
   will-change: opacity;
 }

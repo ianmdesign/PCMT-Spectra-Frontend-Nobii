@@ -303,8 +303,6 @@
   @if (player.isAlive) {
     <div
       class="vw-120 border-timer relative flex flex-col justify-center"
-      animate.enter="animate-weapon-collapse-in animate-duration-200 animate-style-both"
-      animate.leave="animate-weapon-collapse-out animate-duration-150 animate-style-keep"
       [class.items-end]="right()"
       [class]="[weaponInfoBackgroundClass(), right() ? 'rounded-tl-sm' : 'rounded-tr-sm']"
       [class.right]="right()"
