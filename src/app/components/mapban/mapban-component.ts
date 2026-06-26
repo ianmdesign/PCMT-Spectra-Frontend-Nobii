@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from "@angular/core";
+import { Component, Input, OnChanges, SimpleChanges, OnInit } from "@angular/core";
 import { IMapbanSessionData, ISessionTeam, SessionMap, Stage, ICustomFormatData} from "../../services/Types";
 import { MapbanMapComponent } from "./mapban-map/mapban-map.component";
 
@@ -11,7 +11,7 @@ type PlannedAction = "ban" | "pick";
 	templateUrl: "./mapban-component.html",
 	styleUrl: "./mapban-component.css",
 })
-export class MapbanComponent implements OnChanges {
+export class MapbanComponent implements OnChanges, OnInit {
 	@Input({ required: true }) data!: IMapbanSessionData;
 
 	teams: ISessionTeam[] = [];

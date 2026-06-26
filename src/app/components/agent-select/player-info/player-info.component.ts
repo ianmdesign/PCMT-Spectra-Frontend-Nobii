@@ -11,7 +11,7 @@ import { AgentNameService } from "../../../services/agentName.service";
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[style.--player-animation-delay-ms]': 'animationDelayMs()' },
 })
-export class AgentSelectPlayerInfoComponent {
+export class AgentSelectPlayerInfoComponent implements AfterViewInit {
   readonly dataModel = inject(DataModelService);
 
   coverAnimation = signal(false);

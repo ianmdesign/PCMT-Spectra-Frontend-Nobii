@@ -145,7 +145,7 @@ export class TestingMapban implements OnInit, AfterViewInit, OnDestroy {
       { delay: 3000, action: () => this.setScore(this.indexOf("Lotus"),  13, 11) },
 
       // Hold then loop
-      { delay: 5000, action: () => {} },
+      { delay: 5000, action: () => {""} },
     ];
   }
 

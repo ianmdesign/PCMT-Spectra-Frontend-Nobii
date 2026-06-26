@@ -1,4 +1,4 @@
-import { Component, inject, Input } from "@angular/core";
+import { Component, Input } from "@angular/core";
 import { IMapbanSessionData, SessionMap } from "../../services/Types";
 import { MapbanBanIconComponent } from "./mapban-map/mapban-ban-icon/mapban-fs-ban-icon.component";
 import { MapbanMapComponent } from "./mapban-map/mapban-fs-map.component";

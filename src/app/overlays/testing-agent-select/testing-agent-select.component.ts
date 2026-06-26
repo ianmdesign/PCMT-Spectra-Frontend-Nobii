@@ -9,7 +9,7 @@ import { IMatchData } from "../../services/Types";
   templateUrl: "./testing-agent-select.component.html",
   styleUrl: "./testing-agent-select.component.css",
 })
-export class TestingAgentSelectComponent implements OnInit {
+export class TestingAgentSelectComponent implements OnInit, OnDestroy {
   readonly dataModel = inject(DataModelService);
   private agentSelectTimer?: number;
 
