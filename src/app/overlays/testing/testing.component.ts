@@ -28,7 +28,7 @@ export class TestingComponent implements OnInit {
       switchRound: 12,
       firstOtRound: 25,
       attackersWon: false,
-      showAliveKDA: true,
+      showAliveKDA: false,
       agentSelectStartTime: 0,
       tools: {
         seriesInfo: {
