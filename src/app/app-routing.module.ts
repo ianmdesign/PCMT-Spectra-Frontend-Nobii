@@ -61,6 +61,13 @@ const routes: Routes = [
             (m) => m.TestingMapBreakdown,
           ),
       },
+      {
+        path: "mapban",
+        loadComponent: () =>
+          import("./overlays/testing-mapban/testing-mapban").then(
+            (m) => m.TestingMapban,
+          ),
+      },
     ],
   },
   {
@@ -93,10 +100,22 @@ const routes: Routes = [
       import("./overlays/mapban-overlay/mapban-overlay.component").then((m) => m.MapbanUiComponent),
   },
   {
+    path: "mapban-fs",
+    loadComponent: () =>
+      import("./overlays/mapban-fs-overlay/mapban-fs-overlay.component").then((m) => m.MapbanFsOverlayComponent),
+  },
+  {
     path: "playercams",
     loadComponent: () =>
       import("./components/combat/playercams/playercams.component").then(
         (m) => m.PlayercamsComponent,
+      ),
+  },
+  {
+    path: "playercams-alt",
+    loadComponent: () =>
+      import("./components/combat/playercams-alt/playercams-alt.component").then(
+        (m) => m.PlayercamsAltComponent,
       ),
   },
   {

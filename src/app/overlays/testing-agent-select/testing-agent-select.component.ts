@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from "@angular/core";
+import { Component, inject, OnDestroy, OnInit } from "@angular/core";
 import { AgentSelectOverlayComponent } from "../agent-select-overlay/agent-select-overlay.component";
 import { DataModelService } from "../../services/dataModel.service";
 import { IMatchData } from "../../services/Types";
@@ -9,8 +9,9 @@ import { IMatchData } from "../../services/Types";
   templateUrl: "./testing-agent-select.component.html",
   styleUrl: "./testing-agent-select.component.css",
 })
-export class TestingAgentSelectComponent implements OnInit {
+export class TestingAgentSelectComponent implements OnInit, OnDestroy {
   readonly dataModel = inject(DataModelService);
+  private agentSelectTimer?: number;
 
   ngOnInit(): void {
     const match: IMatchData = {
@@ -25,6 +26,7 @@ export class TestingAgentSelectComponent implements OnInit {
       firstOtRound: 25,
       showAliveKDA: true,
       attackersWon: false,
+      agentSelectStartTime: 0,
       tools: {
         seriesInfo: {
           needed: 3,
@@ -60,7 +62,7 @@ export class TestingAgentSelectComponent implements OnInit {
         },
         tournamentInfo: {
           name: "",
-          logoUrl: "",
+          logoUrl: "assets/misc/logo.webp",
           backdropUrl: "",
         },
         timeoutDuration: 60,
@@ -90,6 +92,7 @@ export class TestingAgentSelectComponent implements OnInit {
           type: "tournamentInfo",
           sponsors: [],
         },
+        agentSelectActive: false,
       },
       toastInfo: {
         active: false,
@@ -109,8 +112,8 @@ export class TestingAgentSelectComponent implements OnInit {
         {
           players: [
             {
-              name: "Testg",
-              fullName: "Testg#ABC",
+              name: "Test",
+              fullName: "Test#ABC",
               playerId: 0,
               isAlive: true,
               agentInternal: "Vampire",
@@ -555,6 +558,48 @@ export class TestingAgentSelectComponent implements OnInit {
       ],
     };
     this.dataModel.match.set(match);
+  }
+
+  ngOnDestroy(): void {
+    this.stopAgentSelectTimer();
+  }
+
+  simulateAgentSelectStartTime() {
+    this.stopAgentSelectTimer();
+
+    const timerStart = performance.now();
+    this.dataModel.match.update((v) => {
+      const ret = v;
+      ret.agentSelectStartTime = 0;
+      return ret;
+    });
+
+    const tick = () => {
+      const elapsedMs = performance.now() - timerStart;
+      const clampedElapsedMs = Math.min(elapsedMs, 95_000);
+
+      this.dataModel.match.update((v) => {
+        const ret = v;
+        ret.agentSelectStartTime = clampedElapsedMs;
+        return ret;
+      });
+
+      if (clampedElapsedMs >= 95_000) {
+        this.stopAgentSelectTimer();
+        return;
+      }
+
+      this.agentSelectTimer = requestAnimationFrame(tick);
+    };
+
+    this.agentSelectTimer = requestAnimationFrame(tick);
+  }
+
+  private stopAgentSelectTimer() {
+    if (this.agentSelectTimer !== undefined) {
+      cancelAnimationFrame(this.agentSelectTimer);
+      this.agentSelectTimer = undefined;
+    }
   }
 
   lockAgent(teamIndex: number, playerIndex: number) {

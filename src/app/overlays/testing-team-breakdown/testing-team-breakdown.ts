@@ -90,11 +90,16 @@ export class TestingTeamBreakdown implements OnInit, OnDestroy {
       kills: this.createMockKills(mockPlayers),
     };
 
-    // Inject mock sponsor data for testing, then start rotation
+    // Inject mock tournament and sponsor data for testing
     this.dataModel.match.update((data) => ({
       ...data,
       tools: {
         ...data.tools,
+        tournamentInfo: {
+          name: "Test Tournament",
+          logoUrl: "assets/misc/icon.webp",
+          backdropUrl: "",
+        },
         sponsorInfo: {
           enabled: true,
           duration: 5000,

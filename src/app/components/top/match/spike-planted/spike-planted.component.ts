@@ -27,8 +27,8 @@ export class SpikePlantedComponent {
     }
   });
 
-  blinkTimerRef?: NodeJS.Timeout;
-  pulseTimerRef?: NodeJS.Timeout;
+  blinkTimerRef?: ReturnType<typeof setTimeout>;
+  pulseTimerRef?: ReturnType<typeof setTimeout>;
   blinkState = true;
   pulseState = false;
   isBlinking = false;

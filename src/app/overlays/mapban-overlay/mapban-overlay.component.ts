@@ -2,11 +2,12 @@ import { AfterViewInit, Component, inject, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { SocketService } from "../../services/SocketService";
 import { Config } from "../../shared/config";
-import { MapbanMapComponent } from "../../components/mapban/mapban-map/mapban-map.component";
+import { MapbanComponent } from "../../components/mapban/mapban-component";
+import { IMapbanSessionData } from "../../services/Types";
 
 @Component({
   standalone: true,
-  imports: [MapbanMapComponent],
+  imports: [MapbanComponent],
   selector: "app-mapban-ui",
   templateUrl: "./mapban-overlay.component.html",
   styleUrl: "./mapban-overlay.component.css",
@@ -18,10 +19,7 @@ export class MapbanUiComponent implements OnInit, AfterViewInit {
   sessionCode = "UNKNOWN";
   socketService!: SocketService;
 
-  data!: ISessionData;
-  availableMapNames: string[] = [];
-  selectedMaps: SessionMap[] = [];
-  logoIndex = 1;
+  data?: IMapbanSessionData;
 
   constructor() {
     const params = this.route.snapshot.queryParams;
@@ -44,51 +42,20 @@ export class MapbanUiComponent implements OnInit, AfterViewInit {
     });
   }
 
-  public updateMapbanData(data: { data: ISessionData }) {
+  public updateMapbanData(data: { data: IMapbanSessionData }) {
+    const payload = data?.data;
+    console.debug("[MapbanOverlay] incoming payload", {
+      eventSession: payload?.sessionIdentifier,
+      format: payload?.format,
+      stage: payload?.stage,
+      selectedCount: payload?.selectedMaps?.length ?? 0,
+      availableCount: payload?.availableMaps?.length ?? 0,
+      selectedNames: payload?.selectedMaps?.map((m) => m.name) ?? [],
+      availableNames: payload?.availableMaps?.map((m) => m.name) ?? [],
+      hasCustomFormatData: !!payload?.customFormatData,
+      pickBanStates: payload?.customFormatData?.pickBanStates ?? [],
+    });
+
     this.data = data.data;
-    this.availableMapNames = this.data.availableMaps?.map((map) => map.name) || [];
-    this.selectedMaps = this.data.selectedMaps || [];
-    this.logoIndex = this.selectedMaps.length > 0 ? this.selectedMaps.length + 1 : 1;
-    for (let i = 0; i < this.availableMapNames.length; i++) {
-      if (i == 0) {
-        this.selectedMaps.push(new SessionMap("upcoming"));
-      } else {
-        this.selectedMaps.push(new SessionMap(""));
-      }
-    }
   }
 }
-
-export interface ISessionData {
-  sessionIdentifier: string;
-  organizationName: string;
-  isSupporter: boolean;
-  teams: ISessionTeam[];
-  format: "bo1" | "bo3" | "bo5" | undefined;
-  availableMaps: SessionMap[];
-  selectedMaps: SessionMap[];
-  stage: Stage;
-  actingTeamCode: string;
-  actingTeam: 0 | 1;
-}
-
-export interface ISessionTeam {
-  name: string;
-  tricode: string;
-  url: string;
-}
-
-export class SessionMap {
-  name: string;
-  bannedBy?: 0 | 1 = undefined; // 0 = left team, 1 = right team
-  pickedBy?: 0 | 1 = undefined;
-  sidePickedBy?: 0 | 1 = undefined;
-  pickedAttack: boolean | undefined = undefined;
-  score: (number | undefined)[] = [undefined, undefined];
-
-  constructor(name: string) {
-    this.name = name;
-  }
-}
-
-export type Stage = "ban" | "pick" | "side" | "decider";

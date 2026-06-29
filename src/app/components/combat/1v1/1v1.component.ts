@@ -38,6 +38,13 @@ export class OneVersusOneComponent implements OnInit {
     return `animate-1v1-from-slot-${index}`;
   });
 
+  isOneVersusOneActive = computed(
+    () =>
+      this.isOneVersusOne() &&
+      (this.dataModel.match().roundPhase === "combat" ||
+        this.dataModel.match().roundPhase === "end"),
+  );
+
   leftTeam = computed(() => this.dataModel.teams()[0]);
   rightTeam = computed(() => this.dataModel.teams()[1]);
 

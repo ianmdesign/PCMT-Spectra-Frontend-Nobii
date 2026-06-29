@@ -14,6 +14,7 @@ export interface IMatchData {
   switchRound: number;
   firstOtRound: number;
   attackersWon: boolean;
+  agentSelectStartTime: number;
   toastInfo: IToastInfo;
 }
 
@@ -115,6 +116,7 @@ export interface IToolsData {
   playercamsInfo: IPlayercamsInfo;
   nameOverrides: INameOverrides;
   roundWinBox: IRoundWinBox;
+  agentSelectActive: boolean;
 }
 
 export interface ISeriesInfo {
@@ -167,7 +169,7 @@ export interface IRoundWinBox {
 
 export interface IRoundWinBoxSponsors {
   wonTeam: "all" | "left" | "right";
-  roundCeremonie: ("all" | "normal" | "ace" | "clutch" | "teamAce" | "flawless" | "thrifty")[];
+  roundCeremony: ("all" | "normal" | "ace" | "clutch" | "teamAce" | "flawless" | "thrifty")[];
   iconUrl: string;
   backdropUrl: string;
 }

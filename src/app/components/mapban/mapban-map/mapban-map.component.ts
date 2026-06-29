@@ -25,7 +25,6 @@ export class MapbanMapComponent implements AfterViewInit, OnChanges {
   @Input({ required: true }) actingTeam!: 0 | 1 | undefined;
   @Input({ required: true }) stage!: Stage;
   @Input({ required: true }) index!: number;
-  @Input({ required: true }) logoIndex!: number;
   @Input() isSupporter = false;
 
   changeDetectorRef = inject(ChangeDetectorRef);
@@ -38,15 +37,33 @@ export class MapbanMapComponent implements AfterViewInit, OnChanges {
   currentMapNameIndex = 0;
   rotateMapTimeline!: Timeline;
 
-  showLogo = this.index === this.logoIndex;
-
   isPicked = false;
   isBanned = false;
   isInSidePick = false;
   sideIsPicked = false;
   isDecider = false;
+  sidePickedBy: 0 | 1 | undefined = undefined;
 
   isInitialized = false;
+
+  playMapTranslate = false;
+  previousMapName: string | undefined;
+  playSidePicked = false;
+
+  get sidePickerTricode(): string {
+    if (this.sidePickedBy !== undefined && this.teams[this.sidePickedBy]) {
+      return this.teams[this.sidePickedBy].tricode;
+    }
+
+    if (this.map?.pickedBy !== undefined) {
+      const inferred = this.map.pickedBy === 0 ? 1 : 0;
+      if (this.teams[inferred]) {
+        return this.teams[inferred].tricode;
+      }
+    }
+
+    return "TEAM";
+  }
 
   ngAfterViewInit(): void {
     this.isInitialized = true;
@@ -137,7 +154,14 @@ export class MapbanMapComponent implements AfterViewInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["map"] && changes["map"].currentValue) {
       const newMap: SessionMap = changes["map"] && changes["map"].currentValue;
-      this.showLogo = this.index === this.logoIndex;
+
+      // Reset and recompute per-map side picker on every incoming map object.
+      this.sidePickedBy = newMap.sidePickedBy;
+
+      if (newMap.name && newMap.name !== "upcoming" && newMap.name !== this.previousMapName) {
+        this.restartMapTranslate();
+      }
+      this.previousMapName = newMap.name;
 
       if (newMap.name === "upcoming") {
         if (this.isRotating == false) this.startedRotating();
@@ -161,11 +185,16 @@ export class MapbanMapComponent implements AfterViewInit, OnChanges {
       if (newMap.sidePickedBy !== undefined && newMap.pickedAttack === undefined) {
         if (this.isInSidePick == false) this.enteredSidePick();
         this.isInSidePick = true;
+        this.sidePickedBy = newMap.sidePickedBy;
       } else {
         this.isInSidePick = false;
       }
 
       if (newMap.pickedAttack !== undefined) {
+        if (this.sidePickedBy === undefined && newMap.pickedBy !== undefined) {
+          this.sidePickedBy = newMap.pickedBy === 0 ? 1 : 0;
+        }
+
         if (this.sideIsPicked == false) this.gotSidePicked();
         this.sideIsPicked = true;
       } else {
@@ -198,11 +227,25 @@ export class MapbanMapComponent implements AfterViewInit, OnChanges {
   }
 
   private gotSidePicked() {
-    //
+    this.playSidePicked = false;
+    this.changeDetectorRef.detectChanges();
+    requestAnimationFrame(() => {
+      this.playSidePicked = true;
+      this.changeDetectorRef.detectChanges();
+    });
   }
 
   private gotMadeDecider() {
     //
+  }
+
+  private restartMapTranslate(): void {
+    this.playMapTranslate = false;
+    this.changeDetectorRef.detectChanges();
+    requestAnimationFrame(() => {
+      this.playMapTranslate = true;
+      this.changeDetectorRef.detectChanges();
+    });
   }
 
   private rotateMapName(index: 0 | 1) {

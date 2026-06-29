@@ -24,6 +24,7 @@ export class DataModelService {
       this.language.set(i18nHelper.resolveLanguageAlias(paramLang));
       this.translate.use(this.language());
       this.hideAuxiliary.set(params["hideAuxiliary"] === "true");
+      this.hideAuxiliaryText.set(params["hideAuxiliaryText"] === "true");
     });
 
     if (this.route.firstChild && this.route.firstChild.firstChild) {
@@ -98,6 +99,7 @@ export class DataModelService {
   public language = signal("en");
   public minimalMode = signal(false);
   public hideAuxiliary = signal(false);
+  public hideAuxiliaryText = signal(false);
 
   private _tournamentInfoOverride = signal<ITournamentInfo | null>(null);
   private _sponsorInfoOverride = signal<ISponsorInfo | null>(null);
@@ -150,6 +152,7 @@ export const initialMatchData: IMatchData = {
   isRunning: true,
   roundNumber: 0,
   roundPhase: "LOBBY",
+  agentSelectStartTime: 0,
   teams: [
     {
       teamName: "",
@@ -212,6 +215,7 @@ export const initialMatchData: IMatchData = {
       type: "disabled",
       sponsors: [],
     },
+    agentSelectActive: false,
   },
   toastInfo: {
     active: false,

@@ -16,4 +16,9 @@ export class RoundNumberComponent {
   isOvertime = computed(
     () => this.dataModel.match().roundNumber >= this.dataModel.match().firstOtRound,
   );
+
+  overtimeNumber = computed(() => {
+    const match = this.dataModel.match();
+    return Math.floor((match.roundNumber - match.firstOtRound) / 2) + 1;
+  });
 }

@@ -2,7 +2,9 @@
 <app-spike-icon class="pos-x-center z-3"></app-spike-icon>
 
 <app-topscore-new class="pos-x-center pos-y-10"></app-topscore-new>
-<app-mapwins class="pos-x-center pos-y-70"></app-mapwins>
+@if (dataModel.seriesInfo().needed > 1) {
+    <app-mapwins class="pos-x-center pos-y-70"></app-mapwins>
+}
 
 <app-mapinfo-new class="pos-x-4 absolute"></app-mapinfo-new>
 
