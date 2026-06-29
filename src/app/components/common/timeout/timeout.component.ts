@@ -16,7 +16,7 @@ export class TimeoutComponent {
   tournamentBackgroundUrl = computed(() => {
     const backdrop = this.dataModel.tournamentInfo().backdropUrl;
     if (backdrop && backdrop !== "") return backdrop;
-    else return "assets/misc/backdrop.webp";
+    else return "assets/misc/backdrop.png";
   });
 
   tournamentIconUrl = computed(() => {

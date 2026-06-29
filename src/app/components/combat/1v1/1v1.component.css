@@ -87,6 +87,14 @@
   animation: slide-in-playercam-right 0.2s ease-in-out 0.22s both;
 }
 
+/* Hidden off-screen state for preloading iframes before 1v1 activates */
+.playercam-preload {
+  position: fixed;
+  left: -9999px;
+  top: -9999px;
+  pointer-events: none;
+}
+
 @keyframes slide-in-playercam-right {
   from {
     opacity: 0;

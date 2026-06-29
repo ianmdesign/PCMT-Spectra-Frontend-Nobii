@@ -129,11 +129,16 @@ export class TestingMapBreakdown implements OnInit, OnDestroy {
     this.roundsPlayed = this.statsData.rounds.length;
     this.processStatsData();
 
-    // Inject mock sponsor data for testing, then start rotation
+    // Inject mock tournament and sponsor data for testing
     this.dataModel.match.update((data) => ({
       ...data,
       tools: {
         ...data.tools,
+        tournamentInfo: {
+          name: "Test Tournament",
+          logoUrl: "assets/misc/icon.webp",
+          backdropUrl: "",
+        },
         sponsorInfo: {
           enabled: true,
           duration: 5000,

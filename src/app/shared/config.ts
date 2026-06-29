@@ -7,11 +7,11 @@ export class Config {
   mapbanEndpoint = "https://mapban-socket.valospectra.com";
   // mapbanEndpoint = "http://localhost:11201";
 
-  attackerColorPrimary = "#b82e3c";
+  attackerColorPrimary = "#fd4756";
   attackerColorSecondary = "#ff4557";
   attackerColorShieldCurrency = "#ff838f";
 
-  defenderColorPrimary = "#25ac79";
+  defenderColorPrimary = "#21fec5";
   defenderColorSecondary = "#61eab6";
   defenderColorShieldCurrency = "#61eab6";
 

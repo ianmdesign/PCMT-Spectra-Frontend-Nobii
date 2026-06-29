@@ -3,10 +3,11 @@ import { MatchOverlayComponent } from "../match-overlay/match-overlay.component"
 import { DataModelService, initialMatchData } from "../../services/dataModel.service";
 import { IMatchData } from "../../services/Types";
 import { LiveToastComponent } from "../toast-overlay/toast-component";
+import { PlayercamsAltComponent } from "../../components/combat/playercams-alt/playercams-alt.component";
 
 @Component({
   selector: "app-testing-new",
-  imports: [MatchOverlayComponent, LiveToastComponent],
+  imports: [MatchOverlayComponent, LiveToastComponent, PlayercamsAltComponent],
   templateUrl: "./testing.component.html",
   styleUrl: "./testing.component.css",
 })
@@ -27,7 +28,8 @@ export class TestingComponent implements OnInit {
       switchRound: 12,
       firstOtRound: 25,
       attackersWon: false,
-      showAliveKDA: true,
+      showAliveKDA: false,
+      agentSelectStartTime: 0,
       tools: {
         seriesInfo: {
           needed: 3,
@@ -85,14 +87,17 @@ export class TestingComponent implements OnInit {
         },
         playercamsInfo: {
           enable: true,
-          enabledPlayers: ["FNC OO AA EE#1337", "nobii#DEBUG"],
+          enabledPlayers: ["MrFoxy#DEBUG", "TTV RedStone201#DEBUG"],
           removeTricodes: false,
+          identifier: "SPPCEDVACI",
+          secret: "f5bE6fYn", 
         },
         nameOverrides: { overrides: [] },
         roundWinBox: {
           type: "tournamentInfo",
           sponsors: [],
         },
+        agentSelectActive: false,
       },
       toastInfo: {
         active: false,
@@ -113,7 +118,7 @@ export class TestingComponent implements OnInit {
           players: [
             {
               name: "MrFoxy",
-              fullName: "MrFoxy#prod",
+              fullName: "MrFoxy#DEBUG",
               playerId: 0,
               isAlive: true,
               agentInternal: "Stealth",
@@ -150,7 +155,7 @@ export class TestingComponent implements OnInit {
             },
             {
               name: "RedStone201",
-              fullName: "TTV RedStone201#uhhhh",
+              fullName: "TTV RedStone201#DEBUG",
               playerId: 0,
               isAlive: true,
               agentInternal: "Smonk",
@@ -376,11 +381,11 @@ export class TestingComponent implements OnInit {
               locked: false,
             },
             {
-              name: "BeeSting",
-              fullName: "BeeSting#DEBUG",
+              name: "delusion",
+              fullName: "delusion#DEBUG",
               playerId: 0,
               isAlive: true,
-              agentInternal: "Terra",
+              agentInternal: "Rift",
               isObserved: false,
               armorName: "Heavy",
               money: 2100,
@@ -605,7 +610,7 @@ export class TestingComponent implements OnInit {
     });
   }
 
-  spikeTimer?: NodeJS.Timeout;
+  spikeTimer?: ReturnType<typeof setTimeout>;
 
   plantSpike() {
     this.dataModel.match.update((v) => {
@@ -815,7 +820,7 @@ export class TestingComponent implements OnInit {
   }
   //#endregion
 
-  timeoutTimerRef?: NodeJS.Timeout;
+  timeoutTimerRef?: ReturnType<typeof setInterval>;
   startTimeoutTimer() {
     this.timeoutTimerRef = setInterval(() => {
       this.dataModel.match.update((v) => {

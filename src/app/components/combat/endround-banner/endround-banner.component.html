@@ -30,22 +30,19 @@
         [class.banner-close-animation]="clipClosing"
       >
         <!-- Tournament Background -->
-        <div
-          class="absolute inset-0 z-0"
-          style="mask: url(#endround-mask); -webkit-mask: url(#endround-mask)"
-        >
+        <div class="endround-mask absolute inset-0 z-0">
           @if (bannerBackgroundUrl()) {
-            <img class="h-full w-full object-cover" [src]="bannerBackgroundUrl()" />
+            <div
+              class="h-full w-full bg-cover bg-center"
+              [style.background-image]="'url(\'' + bannerBackgroundUrl() + '\')'" 
+            ></div>
           } @else {
             <div class="h-full w-full" [class]="waitingBackgroundClass()"></div>
           }
         </div>
 
         <!-- Round Win Accent -->
-        <div
-          class="absolute inset-0 z-10"
-          style="mask: url(#endround-mask); -webkit-mask: url(#endround-mask)"
-        >
+        <div class="endround-mask absolute inset-0 z-10">
           <div class="absolute" style="top: -50px; left: 15%; transform: scale(0.9)">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -108,32 +105,6 @@
             </svg>
           </div>
         </div>
-
-        <!-- Mask SVG Definition -->
-        <svg width="0" height="0" class="absolute">
-          <defs>
-            <mask id="endround-mask">
-              <linearGradient
-                id="mask-gradient"
-                y1="0.5"
-                x2="1"
-                y2="0.5"
-                gradientUnits="objectBoundingBox"
-              >
-                <stop offset="0" stop-color="#000" />
-                <stop offset="0.297" stop-color="#fff" />
-                <stop offset="0.694" stop-color="#fff" />
-                <stop offset="1" stop-color="#000" />
-              </linearGradient>
-              <path
-                id="Mask"
-                d="M-2104.892,3074.024l220.574.058,18.448-17.244h261.459l19.972,17.244,212.049-.058v142.54h-732.5Z"
-                transform="translate(2104.892 -3056.837)"
-                fill="url(#mask-gradient)"
-              />
-            </mask>
-          </defs>
-        </svg>
 
         <!-- Text Background (positioned half inside/outside mask) -->
         <div class="absolute bottom-7 left-1/2 z-20 -translate-x-1/2 translate-y-1/2 transform">
