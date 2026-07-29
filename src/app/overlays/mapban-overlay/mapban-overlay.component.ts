@@ -56,6 +56,22 @@ export class MapbanUiComponent implements OnInit, AfterViewInit {
       pickBanStates: payload?.customFormatData?.pickBanStates ?? [],
     });
 
-    this.data = data.data;
+    this.data = this.replaceIceboxWithSummit(data.data);
+    
+  }
+
+  private replaceIceboxWithSummit(data: IMapbanSessionData): IMapbanSessionData {
+  const maps = [
+    ...(data.availableMaps ?? []),
+    ...(data.selectedMaps ?? []),
+  ];
+
+  for (const map of maps) {
+    if (map.name?.toLowerCase() === "icebox") {
+      map.name = "Summit";
+    }
+  }
+
+  return data;
   }
 }
