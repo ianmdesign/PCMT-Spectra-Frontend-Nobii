@@ -58,14 +58,41 @@ export class DataModelService {
   }
 
   private onMatchUpdate(data: any) {
-    // Construct map for name overrides if it's a string (from JSON).
-    // The server keeps it as JSON to avoid having to (de)-serialize multiple times.
-    const tempOverrides = data?.tools?.nameOverrides?.overrides || null;
-    if (typeof tempOverrides === "string") {
-      data.tools.nameOverrides.overrides = this.jsonToMap(tempOverrides);
-    }
-    this.match.set(data);
+  // Temporary frontend hotpatch:
+  // Spectra Server v0.3.4 reports unknown maps as Corrode.
+  if (typeof data?.map === "string") {
+    data.map = this.applyLocalMapAlias(data.map);
   }
+
+  // Apply the same hotpatch to past/future map entries in the series display.
+  const mapInfo = data?.tools?.seriesInfo?.mapInfo;
+
+  if (Array.isArray(mapInfo)) {
+    for (const entry of mapInfo) {
+      if (typeof entry?.map === "string") {
+        entry.map = this.applyLocalMapAlias(entry.map);
+      }
+    }
+  }
+
+  // Construct map for name overrides if it's a string (from JSON).
+  // The server keeps it as JSON to avoid having to (de)-serialize multiple times.
+  const tempOverrides = data?.tools?.nameOverrides?.overrides || null;
+
+  if (typeof tempOverrides === "string") {
+    data.tools.nameOverrides.overrides = this.jsonToMap(tempOverrides);
+  }
+
+  this.match.set(data);
+}
+
+private applyLocalMapAlias(mapName: string): string {
+  if (mapName.toLowerCase() === "corrode") {
+    return "Summit";
+  }
+
+  return mapName;
+}
 
   private jsonToMap(json: string): Map<string, string> {
     try {
