@@ -122,3 +122,70 @@
 .team-accent.defender {
   background-color: var(--color-defender-primary);
 }
+
+/*
+ * Video-only player-camera viewport.
+ *
+ * This is the existing h-42 / w-76.25 area inside each 1v1 camera card.
+ * The team logo sits underneath the transparent VDO.Ninja iframe.
+ */
+.playercam-video-area {
+  isolation: isolate;
+  background: rgba(8, 12, 18, 0.78);
+}
+
+/*
+ * Team-logo fallback layer.
+ *
+ * This remains visible whenever the VDO.Ninja viewer has no active video.
+ */
+.playercam-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  pointer-events: none;
+}
+
+/*
+ * Translucent team logo.
+ *
+ * This matches the 80% size you selected for the normal player-camera box.
+ */
+.playercam-team-logo {
+  width: 80%;
+  height: 80%;
+
+  object-fit: contain;
+
+  opacity: 0.24;
+  filter: grayscale(0.15);
+
+  pointer-events: none;
+}
+
+/*
+ * VDO.Ninja iframe layer.
+ *
+ * This sits above the fallback logo. The VDO viewer uses transparent output,
+ * so the logo remains visible while no camera feed is available.
+ */
+.playercam-iframe {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  border: 0;
+  background: transparent;
+
+  pointer-events: none;
+}

@@ -26,13 +26,27 @@
             <div
               class="relative top-6 left-4 box-border flex aspect-video h-44 flex-col justify-end overflow-clip border-[#161515] bg-[#161515]"
             >
-              <div class="absolute top-1 left-1 h-42 w-76.25 overflow-hidden">
-                <iframe
-                  allow="camera;fullscreen;autoplay;"
-                  [src]="getStream(lPlayer.fullName)"
-                  class="aspect-video w-full"
-                ></iframe>
-              </div>
+              <div class="playercam-video-area absolute top-1 left-1 h-42 w-76.25 overflow-hidden">
+  <!-- Team-logo fallback beneath the VDO.Ninja feed -->
+  <div class="playercam-fallback">
+    @if (leftTeam().teamUrl) {
+      <img
+        class="playercam-team-logo"
+        [src]="leftTeam().teamUrl"
+        [alt]="leftTeam().teamName"
+      />
+    }
+  </div>
+
+  <!-- VDO.Ninja feed -->
+  <iframe
+    allow="autoplay; fullscreen"
+    allowtransparency="true"
+    [src]="getStream(lPlayer.fullName)"
+    class="playercam-iframe"
+    tabindex="-1"
+  ></iframe>
+</div>
               <div class="team-accent absolute right-0.75 bottom-1" style="transform: scaleX(-1)">
                 @if (leftTeam().isAttacking) {
                   <svg
@@ -227,13 +241,27 @@
             <div
               class="relative top-6 right-4 box-border flex aspect-video h-44 flex-col justify-end overflow-clip border-[#161515] bg-[#161515]"
             >
-              <div class="absolute top-1 left-1 h-42 w-76.25 overflow-hidden">
-                <iframe
-                  allow="camera;fullscreen;autoplay;"
-                  [src]="getStream(rPlayer.fullName)"
-                  class="aspect-video w-full"
-                ></iframe>
-              </div>
+              <div class="playercam-video-area absolute top-1 left-1 h-42 w-76.25 overflow-hidden">
+  <!-- Team-logo fallback beneath the VDO.Ninja feed -->
+  <div class="playercam-fallback">
+    @if (rightTeam().teamUrl) {
+      <img
+        class="playercam-team-logo"
+        [src]="rightTeam().teamUrl"
+        [alt]="rightTeam().teamName"
+      />
+    }
+  </div>
+
+  <!-- VDO.Ninja feed -->
+  <iframe
+    allow="autoplay; fullscreen"
+    allowtransparency="true"
+    [src]="getStream(rPlayer.fullName)"
+    class="playercam-iframe"
+    tabindex="-1"
+  ></iframe>
+</div>
               <div class="team-accent absolute bottom-1 left-0.75">
                 @if (rightTeam().isAttacking) {
                   <svg

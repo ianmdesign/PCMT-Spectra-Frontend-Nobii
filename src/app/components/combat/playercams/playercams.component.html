@@ -1,65 +1,99 @@
-@if (dataModel.playercamsInfo().enable && !isOneVersusOne()) {
-  <div [class.hidden]="dataModel.match().roundPhase !== 'combat'">
-    @for (team of dataModel.teams(); track $index; let teamIndex = $index) {
-      @for (player of team.players; track $index) {
-        @if (this.enabledPlayers().includes(player.fullName)) {
-          <div
-            class="absolute box-border flex aspect-video h-44 flex-col justify-end overflow-clip border-black/65 bg-black/65"
-            [class.hidden]="!player.isObserved"
-          >
-            <div class="absolute top-1 left-1 h-42 w-76.25 overflow-hidden">
-              <iframe
-                allow="camera;fullscreen;autoplay;"
-                [src]="getStream(player.fullName)"
-                class="aspect-video w-full"
-              ></iframe>
-            </div>
-            @if (player.killsThisRound > 1) {
-              <div
-                class="flex h-7 w-13 -translate-y-1 transform flex-row items-center gap-1.5 pl-2"
-                [animate.enter]="'killbox-slide-in animate-duration-250'"
-                [animate.leave]="'killbox-slide-out animate-duration-250'"
-              >
-                <svg
-                  class="absolute left-1 z-0 opacity-90"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="50"
-                  height="27"
-                  viewBox="0 0 50 27"
-                >
-                  <path
-                    id="killcounter"
-                    d="M-2164,6228v-18l-9-9h-41v27Z"
-                    transform="translate(2214 -6201)"
-                    [attr.fill]="
-                      team.isAttacking
-                        ? 'var(--color-attacker-primary)'
-                        : 'var(--color-defender-primary)'
-                    "
-                  />
-                </svg>
-                <img class="z-1 aspect-square h-6/10" src="assets/misc/crosshair.svg" />
-                <p class="font-dinnext-medium z-1 text-xl text-white">
-                  {{ player.killsThisRound }}
-                </p>
-              </div>
+@if (dataModel.playercamsInfo().identifier && !isOneVersusOne()) {
+  <div class="playercams-container">
+    @for (team of dataModel.teams(); track $index) {
+      @for (player of team.players; track player.fullName) {
+        <div
+          class="playercam-box bg-timer border-timer absolute box-border flex aspect-video h-48 flex-col justify-end overflow-hidden rounded-sm border-3"
+          [class.playercam-active]="
+  player.isObserved &&
+  (
+    dataModel.match().roundPhase === 'combat' ||
+    dataModel.match().roundPhase === 'end' ||
+    dataModel.match().roundPhase === 'game_end'
+  )
+"
+        >
+          <!--
+            Team-logo fallback.
+
+            This remains visible underneath the transparent VDO.Ninja iframe
+            whenever no player-camera video is currently available.
+          -->
+          <div class="playercam-fallback">
+            @if (team.teamUrl) {
+              <img
+                class="playercam-team-logo"
+                [src]="team.teamUrl"
+                [alt]="team.teamName"
+              />
             }
-            <div class="relative bottom-1 left-1 flex h-10 w-76.25 items-center bg-black/70">
-              <div
-                class="team-accent h-10 w-2 opacity-70"
-                [class]="team.isAttacking ? 'attacker' : 'defender'"
-              ></div>
-              <div
-                class="font-dinnext-bold w-full max-w-85 overflow-clip px-2 text-left text-lg whitespace-nowrap text-white"
-              >
-                {{ getDisplayName(player.fullName, player.name) }}
-              </div>
-              <div class="font-foundry-bold w-full px-3 text-right text-lg text-white">
-                {{ player.kills }} / {{ player.deaths }} / {{ player.assists }}
-              </div>
+          </div>
+
+          <!--
+            Player-camera feed.
+
+            Every iframe remains mounted, even when this player is not being
+            observed. Inactive boxes are made transparent with CSS instead of
+            being removed with display:none.
+          -->
+          <div class="playercam-video">
+            <iframe
+              allow="autoplay; fullscreen"
+              allowtransparency="true"
+              [src]="getStream(player.fullName)"
+              class="playercam-iframe"
+              tabindex="-1"
+            ></iframe>
+          </div>
+
+          @if (player.killsThisRound > 0) {
+            <div
+              class="killbox-gradient playercam-kills flex h-7 w-13 flex-row items-center gap-1 rounded-tr-2xl pl-2"
+              [class]="
+                team.isAttacking ? 'attacker' : 'defender'
+              "
+            >
+              <img
+                class="aspect-square h-8/10"
+                src="assets/misc/crosshair.svg"
+                alt=""
+              />
+
+              <p class="font-montserrat text-lg font-semibold text-white">
+                {{ player.killsThisRound }}
+              </p>
+            </div>
+          }
+
+          <div
+            class="playercam-info relative flex h-7 w-full bg-black/70"
+          >
+            <div
+              class="gradient absolute"
+              [class]="
+                team.isAttacking ? 'attacker' : 'defender'
+              "
+            ></div>
+
+            <div
+              class="text-shadow-xl font-montserrat w-full max-w-85 overflow-hidden px-2 text-left text-lg font-extrabold text-white"
+            >
+              {{
+                getDisplayName(
+                  player.fullName,
+                  player.name
+                )
+              }}
+            </div>
+
+            <div
+              class="font-montserrat w-full px-2 text-right text-lg font-semibold text-white"
+            >
+              {{ player.kills }} / {{ player.deaths }} /
+              {{ player.assists }}
             </div>
           </div>
-        }
+        </div>
       }
     }
   </div>

@@ -64,19 +64,15 @@ export class OneVersusOneComponent implements OnInit {
 
   // Check if playercams should be shown for both players in the 1v1
   shouldShowPlayercams = computed(() => {
-    const playercamsInfo = this.dataModel.playercamsInfo();
-    if (!playercamsInfo.enable) return false;
+  const identifier =
+    this.dataModel.playercamsInfo().identifier;
 
-    const enabledPlayers = playercamsInfo.enabledPlayers ?? [];
-    const leftPlayer = this.leftPlayer();
-    const rightPlayer = this.rightPlayer();
-
-    if (!leftPlayer || !rightPlayer) return false;
-
-    return (
-      enabledPlayers.includes(leftPlayer.fullName) && enabledPlayers.includes(rightPlayer.fullName)
-    );
-  });
+  return (
+    !!identifier &&
+    !!this.leftPlayer() &&
+    !!this.rightPlayer()
+  );
+});
 
   ngOnInit() {
     // Initialize streams for all players via shared service
