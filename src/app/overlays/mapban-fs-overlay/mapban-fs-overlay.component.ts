@@ -61,21 +61,6 @@ export class MapbanFsOverlayComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    this.data = this.replaceIceboxWithSummit(payload.data);
-  }
-
-  private replaceIceboxWithSummit(data: IMapbanSessionData): IMapbanSessionData {
-  const maps = [
-    ...(data.availableMaps ?? []),
-    ...(data.selectedMaps ?? []),
-  ];
-
-  for (const map of maps) {
-    if (map.name?.toLowerCase() === "icebox") {
-      map.name = "Summit";
-    }
-  }
-
-  return data;
+    this.data = payload.data;
   }
 }
