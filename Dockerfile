@@ -1,4 +1,6 @@
-FROM node:22-alpine3.19 AS builder
+# syntax=docker/dockerfile:1
+
+FROM --platform=$BUILDPLATFORM node:22-alpine3.19 AS builder
 
 WORKDIR /app
 
@@ -6,7 +8,7 @@ COPY . .
 
 RUN corepack enable
 RUN yarn install --immutable && \
-  yarn build
+    yarn build
 
 FROM nginx:1.27.2-alpine
 
