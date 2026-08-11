@@ -9,6 +9,11 @@ export class SocketService {
   mapbanSocket!: io.Socket;
   mapbanSubscribers: Function[] = [];
 
+  pcmtToolsSocket!: io.Socket;
+  pcmtToolsSubscribers: Function[] = [];
+  private pcmtLastRoster: { groupCode: string; teams: any[] } | null = null;
+  private pcmtLastRosterSignature = "";
+
   private static instance: SocketService;
 
   public static getInstance(): SocketService {
@@ -96,11 +101,63 @@ export class SocketService {
     return this;
   }
 
+  public connectPcmtTools(socketEndpoint: string, groupCode: string): SocketService {
+    if (this.pcmtToolsSocket && this.pcmtToolsSocket.connected) {
+      console.warn("SocketService PCMT Tools is already connected. Reusing existing connection.");
+      return this;
+    }
+
+    this.pcmtToolsSocket = io.connect(socketEndpoint, {
+      autoConnect: true,
+      reconnection: true,
+    });
+
+    const logon = () => {
+      this.pcmtToolsSocket.emit("frontend_logon", { groupCode });
+      if (this.pcmtLastRoster) {
+        this.pcmtToolsSocket.emit("frontend_roster", {
+          ...this.pcmtLastRoster,
+          updatedAt: Date.now(),
+        });
+      }
+    };
+
+    this.pcmtToolsSocket.on("connect", logon);
+    this.pcmtToolsSocket.on("pcmt_tools_data", (data: any) => {
+      this.pcmtToolsSubscribers.forEach((subscriber) => subscriber(data));
+    });
+
+    this.pcmtToolsSocket.io.on("reconnect_attempt", (attempt: number) => {
+      console.log(`PCMT Tools connection lost, attempting to reconnect (Attempt: ${attempt})`);
+    });
+
+    return this;
+  }
+
+  public sendPcmtRoster(groupCode: string, teams: any[]) {
+    const signature = JSON.stringify(teams);
+    if (signature === this.pcmtLastRosterSignature) return;
+
+    this.pcmtLastRosterSignature = signature;
+    this.pcmtLastRoster = { groupCode, teams };
+
+    if (!this.pcmtToolsSocket || !this.pcmtToolsSocket.connected) return;
+    this.pcmtToolsSocket.emit("frontend_roster", {
+      groupCode,
+      teams,
+      updatedAt: Date.now(),
+    });
+  }
+
   subscribeMatch(handler: Function) {
     this.matchSubscribers.push(handler);
   }
 
   subscribeMapban(handler: Function) {
     this.mapbanSubscribers.push(handler);
+  }
+
+  subscribePcmtTools(handler: Function) {
+    this.pcmtToolsSubscribers.push(handler);
   }
 }

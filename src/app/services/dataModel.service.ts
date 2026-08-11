@@ -15,6 +15,16 @@ export class DataModelService {
   protected config = inject(Config);
   protected translate = inject(TranslateService);
 
+  // Preserve the latest values received directly from Spectra. PCMT data is
+  // layered over these values instead of mutating the upstream source of truth.
+  private spectraNameOverrides = new Map<string, string>();
+  private spectraPlayercamsInfo: any = { enable: false };
+
+  // A null PCMT playercam value means "no PCMT session for this group code" and
+  // intentionally falls back to whatever the stock Spectra Server supplied.
+  private pcmtNameOverrides = new Map<string, string>();
+  private pcmtPlayercamsInfo: any | null = null;
+
   constructor() {
     this.route.queryParams.subscribe((params) => {
       this.groupCode.set(((params["groupCode"] as string) || "").toUpperCase());
@@ -43,6 +53,11 @@ export class DataModelService {
     } else {
       SocketService.getInstance().subscribeMatch(this.onMatchUpdate.bind(this));
       SocketService.getInstance().connectMatch(this.config.serverEndpoint, this.groupCode());
+
+      if (this.config.pcmtToolsEndpoint && this.config.pcmtToolsEndpoint.length > 0) {
+        SocketService.getInstance().subscribePcmtTools(this.onPcmtToolsUpdate.bind(this));
+        SocketService.getInstance().connectPcmtTools(this.config.pcmtToolsEndpoint, this.groupCode());
+      }
     }
 
     if (this.sessionId() && this.sessionId().length > 0) {
@@ -58,41 +73,147 @@ export class DataModelService {
   }
 
   private onMatchUpdate(data: any) {
-  // Temporary frontend hotpatch:
-  // Spectra Server v0.3.4 reports unknown maps as Corrode.
-  if (typeof data?.map === "string") {
-    data.map = this.applyLocalMapAlias(data.map);
-  }
+    // Temporary frontend hotpatch:
+    // Spectra Server v0.3.4 reports unknown maps as Corrode.
+    if (typeof data?.map === "string") {
+      data.map = this.applyLocalMapAlias(data.map);
+    }
 
-  // Apply the same hotpatch to past/future map entries in the series display.
-  const mapInfo = data?.tools?.seriesInfo?.mapInfo;
+    // Apply the same hotpatch to past/future map entries in the series display.
+    const mapInfo = data?.tools?.seriesInfo?.mapInfo;
 
-  if (Array.isArray(mapInfo)) {
-    for (const entry of mapInfo) {
-      if (typeof entry?.map === "string") {
-        entry.map = this.applyLocalMapAlias(entry.map);
+    if (Array.isArray(mapInfo)) {
+      for (const entry of mapInfo) {
+        if (typeof entry?.map === "string") {
+          entry.map = this.applyLocalMapAlias(entry.map);
+        }
       }
     }
+
+    // Capture the stock Spectra tools data before layering PCMT state over it.
+    this.spectraNameOverrides = this.toOverrideMap(data?.tools?.nameOverrides?.overrides);
+    this.spectraPlayercamsInfo = { ...(data?.tools?.playercamsInfo || { enable: false }) };
+
+    this.applyPcmtToolsToMatch(data);
+    this.match.set(data);
+    this.reportRosterToPcmt(data);
   }
 
-  // Construct map for name overrides if it's a string (from JSON).
-  // The server keeps it as JSON to avoid having to (de)-serialize multiple times.
-  const tempOverrides = data?.tools?.nameOverrides?.overrides || null;
+  private onPcmtToolsUpdate(data: any) {
+    this.pcmtNameOverrides = this.toOverrideMap(data?.nameOverrides);
+    this.pcmtPlayercamsInfo = data?.playercamsInfo ?? null;
 
-  if (typeof tempOverrides === "string") {
-    data.tools.nameOverrides.overrides = this.jsonToMap(tempOverrides);
+    // Re-emit the current match signal immediately so a name edit or camera
+    // session change updates the live overlay without waiting for Spectra's next
+    // match_data packet.
+    const current = this.match();
+    const next: any = {
+      ...current,
+      tools: {
+        ...current.tools,
+        playercamsInfo: { ...(current.tools?.playercamsInfo || { enable: false }) },
+        nameOverrides: { ...(current.tools?.nameOverrides || {}) },
+      },
+    };
+    this.applyPcmtToolsToMatch(next);
+    this.match.set(next);
   }
 
-  this.match.set(data);
-}
+  private applyPcmtToolsToMatch(data: any) {
+    if (!data?.tools) return;
 
-private applyLocalMapAlias(mapName: string): string {
-  if (mapName.toLowerCase() === "corrode") {
-    return "Summit";
+    const mergedOverrides = new Map<string, string>(this.spectraNameOverrides);
+
+    // PCMT is authoritative for a Riot ID when a persistent override exists.
+    // Remove any differently-cased Spectra key before adding the PCMT value.
+    for (const [riotId, displayName] of this.pcmtNameOverrides.entries()) {
+      const normalized = this.normalizeRiotId(riotId);
+      for (const existingKey of Array.from(mergedOverrides.keys())) {
+        if (this.normalizeRiotId(existingKey) === normalized) {
+          mergedOverrides.delete(existingKey);
+        }
+      }
+      mergedOverrides.set(riotId, displayName);
+
+      // Existing display components use exact Map.get(fullName). Add the exact
+      // casing currently reported by Spectra so persistent matching remains
+      // case-insensitive without changing every presentation component.
+      for (const team of data?.teams || []) {
+        for (const player of team?.players || []) {
+          if (
+            typeof player?.fullName === "string" &&
+            this.normalizeRiotId(player.fullName) === normalized
+          ) {
+            mergedOverrides.set(player.fullName, displayName);
+          }
+        }
+      }
+    }
+
+    data.tools.nameOverrides = {
+      ...(data.tools.nameOverrides || {}),
+      overrides: mergedOverrides,
+    };
+
+    data.tools.playercamsInfo =
+      this.pcmtPlayercamsInfo === null
+        ? { ...this.spectraPlayercamsInfo }
+        : { ...this.spectraPlayercamsInfo, ...this.pcmtPlayercamsInfo };
   }
 
-  return mapName;
-}
+  private reportRosterToPcmt(data: any) {
+    if (!this.config.pcmtToolsEndpoint || this.config.pcmtToolsEndpoint.length === 0) return;
+
+    const teams = (data?.teams || []).map((team: any) => ({
+      teamName: team?.teamName || "",
+      teamTricode: team?.teamTricode || "",
+      players: (team?.players || [])
+        .filter((player: any) => typeof player?.fullName === "string" && player.fullName.length > 0)
+        .map((player: any) => ({
+          riotId: player.fullName,
+          fallbackName: player.name || "",
+        })),
+    }));
+
+    SocketService.getInstance().sendPcmtRoster(this.groupCode(), teams);
+  }
+
+  private normalizeRiotId(riotId: string): string {
+    return (riotId || "").trim().toLocaleLowerCase();
+  }
+
+  private applyLocalMapAlias(mapName: string): string {
+    if (mapName.toLowerCase() === "corrode") {
+      return "Summit";
+    }
+
+    return mapName;
+  }
+
+  private toOverrideMap(value: any): Map<string, string> {
+    if (value instanceof Map) {
+      return new Map(value);
+    }
+
+    if (typeof value === "string") {
+      return this.jsonToMap(value);
+    }
+
+    if (Array.isArray(value)) {
+      try {
+        return new Map(value);
+      } catch (error) {
+        console.error("Failed to convert override array to Map:", error);
+        return new Map();
+      }
+    }
+
+    if (value && typeof value === "object") {
+      return new Map(Object.entries(value).map(([key, item]) => [key, String(item)]));
+    }
+
+    return new Map();
+  }
 
   private jsonToMap(json: string): Map<string, string> {
     try {

@@ -7,6 +7,10 @@ export class Config {
   mapbanEndpoint = "https://mapban-socket.valospectra.com";
   // mapbanEndpoint = "http://localhost:11201";
 
+  // PCMT Playercams / persistent name-override service.
+  // Defaults to the local service and can be overridden in public/assets/config/config.json.
+  pcmtToolsEndpoint = "http://localhost:5400";
+
   attackerColorPrimary = "#fd4756";
   attackerColorSecondary = "#ff4557";
   attackerColorShieldCurrency = "#ff838f";
