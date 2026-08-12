@@ -151,7 +151,10 @@ export class MapBreakdown implements OnInit, OnDestroy {
   private fetchStats(groupCode: string) {
     this.http
       .get<StatsApiMatchResponse>(`${this.config.statsEndpoint}/getStats`, {
-        params: { code: groupCode },
+        params: {
+          code: groupCode,
+          spectraEndpoint: this.config.serverEndpoint,
+        },
       })
       .subscribe((response: StatsApiMatchResponse) => {
         if (this.hasReceivedData || !response.data?.players?.length) {

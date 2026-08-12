@@ -25,6 +25,11 @@ export class DataModelService {
   private pcmtNameOverrides = new Map<string, string>();
   private pcmtPlayercamsInfo: any | null = null;
 
+  // PCMT Stats keeps a server-side Socket.IO watch registered for this group.
+  // Re-registering periodically makes the watch recover automatically if the
+  // stats service is restarted while the OBS/frontend browser remains open.
+  private statsWatchUnsupported = false;
+
   constructor() {
     this.route.queryParams.subscribe((params) => {
       this.groupCode.set(((params["groupCode"] as string) || "").toUpperCase());
@@ -53,6 +58,9 @@ export class DataModelService {
     } else {
       SocketService.getInstance().subscribeMatch(this.onMatchUpdate.bind(this));
       SocketService.getInstance().connectMatch(this.config.serverEndpoint, this.groupCode());
+
+      this.registerStatsWatch();
+      window.setInterval(() => this.registerStatsWatch(), 60_000);
 
       if (this.config.pcmtToolsEndpoint && this.config.pcmtToolsEndpoint.length > 0) {
         SocketService.getInstance().subscribePcmtTools(this.onPcmtToolsUpdate.bind(this));
@@ -159,6 +167,66 @@ export class DataModelService {
       this.pcmtPlayercamsInfo === null
         ? { ...this.spectraPlayercamsInfo }
         : { ...this.spectraPlayercamsInfo, ...this.pcmtPlayercamsInfo };
+  }
+
+  private registerStatsWatch() {
+    if (this.statsWatchUnsupported) return;
+    if (!this.groupCode() || !this.config.statsEndpoint || !this.config.serverEndpoint) return;
+
+    // Keep compatibility with the hosted Spectra stats service while a deployment
+    // is being migrated. It does not expose the PCMT /api/watch endpoint.
+    try {
+      const hostname = new URL(this.config.statsEndpoint).hostname.toLowerCase();
+      if (hostname === "stats.valospectra.com") return;
+    } catch {
+      // Relative/custom URLs are still allowed and are handled by fetch below.
+    }
+
+    const statsEndpoint = this.config.statsEndpoint.replace(/\/+$/, "");
+    fetch(`${statsEndpoint}/api/watch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        groupCode: this.groupCode(),
+        spectraEndpoint: this.config.serverEndpoint,
+      }),
+    })
+      .then((response) => {
+        // A different/legacy stats implementation can coexist with this frontend.
+        // If it definitively does not support watching, do not spam it every minute.
+        if (response.status === 404 || response.status === 405) {
+          this.statsWatchUnsupported = true;
+          return;
+        }
+        if (!response.ok) {
+          console.warn(`PCMT Stats watch registration returned HTTP ${response.status}`);
+        }
+      })
+      .catch((error) => {
+        // Do not disable retries for network/temporary service failures.
+        console.warn("PCMT Stats watch registration failed; will retry", error);
+      });
+  }
+
+  public resolveNameOverride(fullRiotId: string, fallback: string): string {
+    const value = this.match().tools?.nameOverrides?.overrides;
+    if (!(value instanceof Map)) return fallback;
+
+    const exact = value.get(fullRiotId);
+    if (typeof exact === "string" && exact.trim().length > 0) return exact;
+
+    const normalized = this.normalizeRiotId(fullRiotId);
+    for (const [riotId, displayName] of value.entries()) {
+      if (
+        this.normalizeRiotId(riotId) === normalized &&
+        typeof displayName === "string" &&
+        displayName.trim().length > 0
+      ) {
+        return displayName;
+      }
+    }
+
+    return fallback;
   }
 
   private reportRosterToPcmt(data: any) {

@@ -13,6 +13,7 @@ import {
   signal,
 } from "@angular/core";
 import { DataModelService } from "../../services/dataModel.service";
+import { IPlayerData } from "../../services/Types";
 import { AgentSelectPlayerInfoComponent } from "../../components/agent-select/player-info/player-info.component";
 
 @Component({
@@ -101,6 +102,37 @@ export class AgentSelectOverlayComponent implements AfterViewInit, OnDestroy {
 
   numSequence(n: number): number[] {
     return Array(n);
+  }
+
+  playerDisplayName(player: IPlayerData): string {
+    const fallback = player.name;
+    const rawOverrides = this.dataModel.match().tools.nameOverrides?.overrides as unknown;
+
+    if (!(rawOverrides instanceof Map) || !player.fullName) {
+      return fallback;
+    }
+
+    const exactOverride = rawOverrides.get(player.fullName);
+    if (typeof exactOverride === "string" && exactOverride.trim().length > 0) {
+      return exactOverride;
+    }
+
+    // PCMT overrides are logically case-insensitive. DataModelService normally
+    // adds the exact Spectra casing as an alias, but keep Agent Select robust if
+    // a player arrives before that alias has been added.
+    const normalizedFullName = player.fullName.trim().toLocaleLowerCase();
+    for (const [riotId, displayName] of rawOverrides.entries()) {
+      if (
+        typeof riotId === "string" &&
+        riotId.trim().toLocaleLowerCase() === normalizedFullName &&
+        typeof displayName === "string" &&
+        displayName.trim().length > 0
+      ) {
+        return displayName;
+      }
+    }
+
+    return fallback;
   }
 
   ngAfterViewInit(): void {

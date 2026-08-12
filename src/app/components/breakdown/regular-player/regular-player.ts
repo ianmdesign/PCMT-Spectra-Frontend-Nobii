@@ -1,6 +1,7 @@
-import { Component, Input, OnInit } from "@angular/core";
+import { Component, inject, Input, OnInit } from "@angular/core";
 import { AgentNameService } from "../../../services/agentName.service";
 import { AgentRoleService } from "../../../services/agentRole.service";
+import { DataModelService } from "../../../services/dataModel.service";
 import { StatsApiMatchPlayer } from "../StatsApiMapping";
 
 @Component({
@@ -10,6 +11,8 @@ import { StatsApiMatchPlayer } from "../StatsApiMapping";
   styleUrl: "./regular-player.css",
 })
 export class RegularPlayer implements OnInit {
+  protected dataModel = inject(DataModelService);
+
   @Input({ required: true })
   player!: StatsApiMatchPlayer;
 
@@ -20,6 +23,13 @@ export class RegularPlayer implements OnInit {
 
   ngOnInit() {
     this.agentInternalName = AgentNameService.getAgentInternalName(this.player.agent.name ?? "");
+  }
+
+  displayName(): string {
+    return this.dataModel.resolveNameOverride(
+      `${this.player.name}#${this.player.tag}`,
+      this.player.name,
+    );
   }
 
   getAgentRole(name: string): string {
