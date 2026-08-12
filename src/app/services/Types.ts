@@ -159,7 +159,7 @@ export interface IPlayercamsInfo {
 }
 
 export interface INameOverrides {
-  overrides: string[];
+  overrides: string[] | Map<string, string>;
 }
 
 export interface IRoundWinBox {
