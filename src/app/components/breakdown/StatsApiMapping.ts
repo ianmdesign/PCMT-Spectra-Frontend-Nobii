@@ -25,6 +25,31 @@ export type StatsApiWinReason = (typeof StatsApiWinReasons)[keyof typeof StatsAp
 export interface StatsApiMatchResponse {
   status: number;
   data: StatsApiMatch;
+  broadcast?: StatsApiBroadcastInfo;
+}
+
+export interface StatsApiBroadcastTeam {
+  name: string;
+  tricode: string;
+  url: string;
+}
+
+export interface StatsApiBroadcastInfo {
+  leftTeam: StatsApiBroadcastTeam;
+  rightTeam: StatsApiBroadcastTeam;
+  higherScore: 0 | 1;
+  leftScore: number;
+  rightScore: number;
+  tournamentInfo?: {
+    name: string;
+    logoUrl: string;
+    backdropUrl: string;
+  };
+  sponsorInfo?: {
+    enabled: boolean;
+    duration: number;
+    sponsors: string[];
+  };
 }
 
 export interface StatsApiMatch {

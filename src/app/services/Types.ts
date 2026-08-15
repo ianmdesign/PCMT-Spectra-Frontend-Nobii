@@ -156,6 +156,7 @@ export interface IPlayercamsInfo {
   secret?: string;
   endTime?: number;
   enabledPlayers?: string[];
+  streamMappings?: Record<string, string>;
 }
 
 export interface INameOverrides {

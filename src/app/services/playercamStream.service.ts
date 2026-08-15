@@ -18,23 +18,42 @@ export class PlayercamStreamService {
   private readonly streams = new Map<string, SafeResourceUrl>();
 
   /*
-   * Tracks which player-camera session was used to generate the currently
-   * cached VDO.Ninja URLs.
+   * Tracks which player-camera session and stream mapping were used to
+   * generate the currently cached VDO.Ninja URLs.
    */
   private currentIdentifier = "";
+  private currentStreamMappingSignature = "";
 
   constructor() {
     effect(() => {
       const teams = this.dataModel.teams();
-      const identifier =
-        this.dataModel.playercamsInfo().identifier || "";
+      const playercamsInfo = this.dataModel.playercamsInfo();
+      const identifier = playercamsInfo.identifier || "";
+      const streamMappings: Record<string, string> =
+        playercamsInfo.streamMappings || {};
+      const normalizedStreamMappings = new Map<string, string>(
+        Object.entries(streamMappings).map(([riotId, streamId]) => [
+          this.normalizeRiotId(riotId),
+          streamId,
+        ]),
+      );
+      const streamMappingSignature = JSON.stringify(
+        Array.from(normalizedStreamMappings.entries()).sort(([a], [b]) =>
+          a.localeCompare(b),
+        ),
+      );
 
       /*
-       * If Spectra creates a different player-camera session, the old room
-       * URLs are no longer valid. Clear them and rebuild every player feed.
+       * If Spectra creates a different player-camera session, or PCMT changes
+       * a session-only Riot ID correction, the old room/stream URLs may no
+       * longer be valid. Clear them and rebuild the player feed URLs.
        */
-      if (identifier !== this.currentIdentifier) {
+      if (
+        identifier !== this.currentIdentifier ||
+        streamMappingSignature !== this.currentStreamMappingSignature
+      ) {
         this.currentIdentifier = identifier;
+        this.currentStreamMappingSignature = streamMappingSignature;
         this.streams.clear();
       }
 
@@ -53,6 +72,10 @@ export class PlayercamStreamService {
        *
        * - playercamsInfo.enable
        * - playercamsInfo.enabledPlayers
+       *
+       * PCMT can optionally provide an effective Riot ID -> stream ID mapping.
+       * This is what lets a producer correct a mistyped Riot ID without
+       * changing the player's already-live VDO.Ninja publisher stream.
        */
       for (const team of teams) {
         for (const player of team.players) {
@@ -60,9 +83,13 @@ export class PlayercamStreamService {
             continue;
           }
 
-          const parsedRiotId = this.parseRiotId(player.fullName);
+          const mappedStreamId = normalizedStreamMappings.get(
+            this.normalizeRiotId(player.fullName),
+          );
+          const streamId =
+            mappedStreamId || this.streamIdFromRiotId(player.fullName);
 
-          if (!parsedRiotId) {
+          if (!streamId) {
             console.warn(
               `Cannot create player-camera URL for invalid Riot ID: ${player.fullName}`,
             );
@@ -71,11 +98,7 @@ export class PlayercamStreamService {
 
           this.streams.set(
             player.fullName,
-            this.createStreamUrl(
-              identifier,
-              parsedRiotId.name,
-              parsedRiotId.tagline,
-            ),
+            this.createStreamUrl(identifier, streamId),
           );
         }
       }
@@ -91,33 +114,22 @@ export class PlayercamStreamService {
   }
 
   initializeFromEnabledPlayers(_enabledPlayers: string[]): void {
-  /*
-   * Compatibility method for older player-camera components.
-   *
-   * The updated service automatically creates streams for every player through
-   * its Angular effect, so no explicit initialization is required anymore.
-   */
+    // Compatibility method for older player-camera components.
+    // Reading the value avoids an unused-parameter lint failure while preserving
+    // the previous public method signature.
+    void _enabledPlayers;
   }
-  
-  initializeFromTeams(): void {
-  /*
-   * Compatibility method for the 1v1 component.
-   *
-   * The updated service already watches team data and automatically creates
-   * streams for every player, so no manual initialization is required.
-   */
-}
 
-  /*
-   * Split the Riot ID at the final # character.
-   *
-   * A normal Riot ID resembles:
-   *
-   * Player Name#TAG
-   */
-  private parseRiotId(
-    playerFullName: string,
-  ): { name: string; tagline: string } | undefined {
+  initializeFromTeams(): void {
+    // Compatibility method for the 1v1 component. The service already watches
+    // team data automatically through its Angular effect.
+  }
+
+  private normalizeRiotId(riotId: string): string {
+    return (riotId || "").trim().toLocaleLowerCase();
+  }
+
+  private streamIdFromRiotId(playerFullName: string): string | undefined {
     const separatorIndex = playerFullName.lastIndexOf("#");
 
     if (
@@ -127,36 +139,19 @@ export class PlayercamStreamService {
       return undefined;
     }
 
-    return {
-      name: playerFullName.substring(0, separatorIndex),
-      tagline: playerFullName.substring(separatorIndex + 1),
-    };
+    const name = playerFullName.substring(0, separatorIndex);
+    const tagline = playerFullName.substring(separatorIndex + 1);
+    return `${name.replaceAll(" ", "_")}_H_${tagline}`;
   }
 
   private createStreamUrl(
     identifier: string,
-    name: string,
-    tagline: string,
+    streamId: string,
   ): SafeResourceUrl {
-    /*
-     * Spectra's player-camera publishing IDs replace spaces in the player's
-     * Riot name with underscores and use "_H_" between the name and tagline.
-     *
-     * Example:
-     *
-     * Player Name#NA1
-     *
-     * becomes:
-     *
-     * Player_Name_H_NA1
-     */
-    const streamName =
-      `${name.replaceAll(" ", "_")}_H_${tagline}`;
-
     const url =
       `https://vdo.ninja/` +
       `?room=${encodeURIComponent(identifier)}` +
-      `&view=${encodeURIComponent(streamName)}` +
+      `&view=${encodeURIComponent(streamId)}` +
       `&scene=0` +
       `&cleanoutput` +
       `&vb=2500` +

@@ -3,6 +3,7 @@ import { Config } from "../../shared/config";
 import { HttpClient } from "@angular/common/http";
 import { ActivatedRoute } from "@angular/router";
 import {
+  StatsApiBroadcastInfo,
   StatsApiMatch,
   StatsApiMatchPlayer,
   StatsApiMatchResponse,
@@ -14,7 +15,6 @@ import { TranslateKeys } from "../../services/i18nHelper";
 import { TranslatePipe } from "@ngx-translate/core";
 import { Subscription } from "rxjs";
 import { DataModelService } from "../../services/dataModel.service";
-import { ISponsorInfo, ITournamentInfo } from "../../services/Types";
 
 @Component({
   selector: "app-team-breakdown",
@@ -122,35 +122,24 @@ export class TeamBreakdown implements OnInit, OnDestroy {
         },
       })
       .subscribe((response: StatsApiMatchResponse) => {
-        if (this.hasReceivedData || !response.data?.players?.length) {
+        if (this.hasReceivedData || !response.data?.players?.length || !response.broadcast) {
           return;
         }
 
         this.hasReceivedData = true;
         this.stopPolling();
-        this.processStatsDataIncoming(response.data, groupCode);
+        this.processStatsDataIncoming(response);
       });
   }
 
-  processStatsDataIncoming(data: StatsApiMatch, groupCode: string) {
-    this.statsData = data;
+  processStatsDataIncoming(response: StatsApiMatchResponse) {
+    this.statsData = response.data;
     this.roundsPlayed = this.statsData.rounds.length;
 
-    this.http
-      .get<{
-        leftTeam: AuthTeam;
-        rightTeam: AuthTeam;
-        higherScore: 0 | 1;
-        tournamentInfo?: ITournamentInfo;
-        sponsorInfo?: ISponsorInfo;
-      }>(`${this.config.extrasEndpoint}/getTeamInfoForCode`, {
-        params: { groupCode },
-      })
-      .subscribe((data) => {
-        if (data.tournamentInfo) this.dataModel.setTournamentInfo(data.tournamentInfo);
-        if (data.sponsorInfo) this.dataModel.setSponsorInfo(data.sponsorInfo);
-        this.processTeamInfo(data);
-      });
+    const broadcast = response.broadcast!;
+    if (broadcast.tournamentInfo) this.dataModel.setTournamentInfo(broadcast.tournamentInfo);
+    if (broadcast.sponsorInfo) this.dataModel.setSponsorInfo(broadcast.sponsorInfo);
+    this.processTeamInfo(broadcast);
   }
 
   processStatsDataFully() {
@@ -197,7 +186,7 @@ export class TeamBreakdown implements OnInit, OnDestroy {
     }
   }
 
-  processTeamInfo(teamInfo: { leftTeam: AuthTeam; rightTeam: AuthTeam; higherScore: 0 | 1 }) {
+  processTeamInfo(teamInfo: StatsApiBroadcastInfo) {
     const leftWon = teamInfo.higherScore === 0 ? true : false;
     const winningTeam = this.statsData!.teams.find((team) => team.won === true);
     if (leftWon) {
@@ -229,8 +218,3 @@ export class TeamBreakdown implements OnInit, OnDestroy {
   }
 }
 
-export interface AuthTeam {
-  name: string;
-  tricode: string;
-  url: string;
-}
