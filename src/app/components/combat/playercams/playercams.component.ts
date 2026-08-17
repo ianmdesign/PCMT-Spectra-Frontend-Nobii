@@ -17,9 +17,37 @@ export class PlayercamsComponent {
   readonly oneVsOneService = inject(OneVersusOneService);
   readonly getDisplayName = inject(DisplayNameService).getDisplayName;
 
+  // /overlay-freecam reuses this same persistent iframe pool, but suppresses
+  // the normal observed-player camera. The two 1v1 survivor feeds are still
+  // allowed to become visible below.
+  readonly isFreecamOverlay = window.location.pathname
+    .replace(/\/+$/, "")
+    .endsWith("/overlay-freecam");
+
   readonly isOneVersusOne = computed(() =>
     this.oneVsOneService.isOneVersusOne(),
   );
+
+  readonly isOneVersusOneActive = computed(
+    () =>
+      this.isOneVersusOne() &&
+      (this.dataModel.match().roundPhase === "combat" ||
+        this.dataModel.match().roundPhase === "end"),
+  );
+
+  isLeftOneVersusOnePlayer(playerFullName: string): boolean {
+    return (
+      this.isOneVersusOneActive() &&
+      this.oneVsOneService.leftPlayer()?.fullName === playerFullName
+    );
+  }
+
+  isRightOneVersusOnePlayer(playerFullName: string): boolean {
+    return (
+      this.isOneVersusOneActive() &&
+      this.oneVsOneService.rightPlayer()?.fullName === playerFullName
+    );
+  }
 
   getStream(playerFullName: string): SafeResourceUrl | undefined {
     return this.streamService.getStream(playerFullName);

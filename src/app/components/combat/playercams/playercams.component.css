@@ -46,8 +46,9 @@
 }
 
 /*
- * The container remains mounted during every round phase so the player-camera
- * connections do not need to restart at the beginning of combat.
+ * The container remains mounted during every round phase and during the 1v1
+ * presentation so player-camera connections never need to restart for a mode
+ * change.
  */
 .playercams-container {
   position: absolute;
@@ -61,7 +62,7 @@
  *
  * Inactive cameras use opacity instead of display:none. This allows their
  * embedded VDO.Ninja connections to remain active while another player is
- * being observed.
+ * being observed or while two survivor feeds are being shown by the 1v1 UI.
  */
 .playercam-box {
   isolation: isolate;
@@ -82,7 +83,8 @@
 }
 
 /*
- * Only the currently observed player becomes visible, and only during combat.
+ * Only the currently observed player becomes visible during the normal combat
+ * presentation. The template suppresses this class while 1v1 is active.
  */
 .playercam-box.playercam-active {
   opacity: 1;
@@ -90,11 +92,94 @@
 }
 
 /*
+ * 1v1 shared-camera mode.
+ *
+ * These are the SAME iframe elements used by the normal playercam display.
+ * Only their presentation changes. The coordinates line up with the existing
+ * 1v1 component's 305x168 video openings at 1920x1080:
+ *
+ *   left:  x=20,   y=645
+ *   right: x=1596, y=645 (19px from the right edge)
+ *
+ * The 1v1 graphics shell sits one stacking layer above these feeds and leaves
+ * its video opening transparent.
+ */
+.playercam-box.playercam-1v1-left,
+.playercam-box.playercam-1v1-right {
+  position: fixed;
+  /* parent top (535/1080), card height (82/1080), then top-6 + top-1 */
+  top: calc(57.1296296vh + 1.75rem);
+
+  /* matches w-76.25 / h-42 in the existing 1v1 video opening */
+  width: 19.0625rem !important;
+  height: 10.5rem !important;
+  aspect-ratio: auto !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  overflow: hidden;
+
+  opacity: 1;
+  z-index: 60;
+
+  transition: none;
+}
+
+.playercam-box.playercam-1v1-left {
+  left: 1.25rem;
+  animation: shared-playercam-1v1-left 0.2s ease-in-out 0.22s both;
+}
+
+.playercam-box.playercam-1v1-right {
+  right: 1.1875rem;
+  animation: shared-playercam-1v1-right 0.2s ease-in-out 0.22s both;
+}
+
+@keyframes shared-playercam-1v1-left {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shared-playercam-1v1-right {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/*
+ * In 1v1 mode this box is only the live video/fallback layer. The existing 1v1
+ * component continues to draw its own surrounding accent and K/D/A shell.
+ */
+.playercam-box.playercam-1v1-left .playercam-kills,
+.playercam-box.playercam-1v1-left .playercam-info,
+.playercam-box.playercam-1v1-right .playercam-kills,
+.playercam-box.playercam-1v1-right .playercam-info {
+  display: none;
+}
+
+.playercam-box.playercam-1v1-left .playercam-fallback,
+.playercam-box.playercam-1v1-right .playercam-fallback {
+  padding-bottom: 0;
+}
+
+/*
  * Team-logo fallback layer.
  *
  * This remains underneath the player-camera iframe. The bottom padding keeps
- * the logo centred within the video portion rather than including the lower
- * player-information bar.
+ * the logo centred within the normal display's video portion rather than
+ * including the lower player-information bar.
  */
 .playercam-fallback {
   position: absolute;
@@ -156,7 +241,7 @@
 
 /*
  * Spectra's kill counter and player-information bar remain above the fallback
- * logo and camera feed.
+ * logo and camera feed in the normal single-player display.
  */
 .playercam-kills {
   position: relative;

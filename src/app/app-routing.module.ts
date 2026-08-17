@@ -30,6 +30,10 @@ const routes: Routes = [
     ],
   },
   {
+    path: "overlay-freecam",
+    component: MatchOverlayComponent,
+  },
+  {
     path: "testing",
     children: [
       {

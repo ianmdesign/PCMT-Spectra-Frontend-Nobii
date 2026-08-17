@@ -19,7 +19,17 @@ export class PlayerCombatCardComponent implements OnChanges {
   @Input() player!: any;
   @Input() playerHealth!: number; //only needed so change detection can give us an event for health change
 
-  readonly isObserved = input<boolean>(); //only needed so change detection can correctly trigger the color switch
+  // The freecam overlay uses the same live player data as /overlay, but must
+  // never visually identify the POV followed by the main observer. Transforming
+  // the input here suppresses every existing observed-player style in both the
+  // normal combat list and the 1v1 cards without mutating Spectra's data.
+  private readonly isFreecamOverlay = window.location.pathname
+    .replace(/\/+$/, "")
+    .endsWith("/overlay-freecam");
+
+  readonly isObserved = input(false, {
+    transform: (value: boolean) => (this.isFreecamOverlay ? false : value),
+  }); //only needed so change detection can correctly trigger the color switch
   readonly isAlive = input<boolean>();
 
   getDisplayName = inject(DisplayNameService).getDisplayName;
