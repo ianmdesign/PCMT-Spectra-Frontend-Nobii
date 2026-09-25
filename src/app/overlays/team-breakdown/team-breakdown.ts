@@ -43,9 +43,11 @@ export class TeamBreakdown implements OnInit, OnDestroy {
   protected leftPlayers?: StatsApiMatchPlayer[];
   protected rightPlayers?: StatsApiMatchPlayer[];
 
-  private hasReceivedData = false;
+  private currentGroupCode = "";
+  private displayedMatchId: string | null = null;
   private pollTimerRef?: ReturnType<typeof setInterval>;
   private routeSubscription?: Subscription;
+  private statsRequest?: Subscription;
 
   protected currentSponsorIndex = signal(0);
   private sponsorIntervalId?: number;
@@ -75,21 +77,22 @@ export class TeamBreakdown implements OnInit, OnDestroy {
   ngOnInit() {
     this.routeSubscription = this.route.queryParams.subscribe((params) => {
       this.hideBg = params["hideBg"] === "true" || params["hideBg"] === "1";
-      let groupCode = params["groupCode"];
+      const groupCode = (params["groupCode"] || "").toUpperCase();
+      this.currentGroupCode = groupCode;
+      this.statsRequest?.unsubscribe();
+      this.statsRequest = undefined;
+      this.clearStats();
+      this.stopPolling();
       if (groupCode) {
-        groupCode = groupCode.toUpperCase();
-        this.hasReceivedData = false;
-        this.stopPolling();
         this.fetchStats(groupCode);
         this.startPolling(groupCode);
-      } else {
-        this.stopPolling();
       }
     });
   }
 
   ngOnDestroy() {
     this.stopPolling();
+    this.statsRequest?.unsubscribe();
     this.routeSubscription?.unsubscribe();
     if (this.sponsorIntervalId) {
       clearInterval(this.sponsorIntervalId);
@@ -97,13 +100,7 @@ export class TeamBreakdown implements OnInit, OnDestroy {
   }
 
   private startPolling(groupCode: string) {
-    this.pollTimerRef = setInterval(() => {
-      if (this.hasReceivedData) {
-        this.stopPolling();
-        return;
-      }
-      this.fetchStats(groupCode);
-    }, 15000);
+    this.pollTimerRef = setInterval(() => this.fetchStats(groupCode), 15000);
   }
 
   private stopPolling() {
@@ -114,22 +111,42 @@ export class TeamBreakdown implements OnInit, OnDestroy {
   }
 
   private fetchStats(groupCode: string) {
-    this.http
+    if (this.statsRequest && !this.statsRequest.closed) return;
+    this.statsRequest = this.http
       .get<StatsApiMatchResponse>(`${this.config.statsEndpoint}/getStats`, {
         params: {
           code: groupCode,
           spectraEndpoint: this.config.serverEndpoint,
         },
       })
-      .subscribe((response: StatsApiMatchResponse) => {
-        if (this.hasReceivedData || !response.data?.players?.length || !response.broadcast) {
-          return;
-        }
+      .subscribe({
+        next: (response: StatsApiMatchResponse) => {
+          if (groupCode !== this.currentGroupCode) return;
+          if (!response.data?.players?.length || !response.broadcast) {
+            this.clearStats();
+            return;
+          }
 
-        this.hasReceivedData = true;
-        this.stopPolling();
-        this.processStatsDataIncoming(response);
+          const matchId = response.data.metadata?.match_id;
+          if (matchId && matchId === this.displayedMatchId) return;
+          this.clearStats();
+          this.displayedMatchId = matchId || null;
+          this.processStatsDataIncoming(response);
+        },
+        error: (error) => console.warn("Team stats request failed; will retry", error),
       });
+  }
+
+  private clearStats() {
+    this.displayedMatchId = null;
+    this.statsData = undefined;
+    this.leftTeam = undefined;
+    this.rightTeam = undefined;
+    this.leftPlayers = undefined;
+    this.rightPlayers = undefined;
+    this.leftTeamName = "Blue";
+    this.rightTeamName = "Red";
+    this.roundsPlayed = 0;
   }
 
   processStatsDataIncoming(response: StatsApiMatchResponse) {
@@ -217,4 +234,3 @@ export class TeamBreakdown implements OnInit, OnDestroy {
     return Array(n);
   }
 }
-
