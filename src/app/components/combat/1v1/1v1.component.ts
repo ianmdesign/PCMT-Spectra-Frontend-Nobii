@@ -80,6 +80,7 @@ export class OneVersusOneComponent {
   // live feed is the already-mounted iframe from PlayercamsComponent, so the
   // 1v1 shell cannot open a second VDO.Ninja/WebRTC viewer.
   getStream(_playerFullName: string): SafeResourceUrl {
+    void _playerFullName;
     return this.blankPlayercamUrl;
   }
 }

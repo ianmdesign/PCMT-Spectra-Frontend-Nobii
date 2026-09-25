@@ -70,25 +70,23 @@ export class MapbanMapComponent {
         }
 
   get defTeamTricode(): string {
-  let sidePickerIndex = this.sidePickedBy;
+    let sidePickerIndex = this.sidePickedBy;
 
-  // On picked maps, the team that did not pick the map chooses the side.
-  if (sidePickerIndex === undefined && this.pickedBy !== undefined) {
-    sidePickerIndex = this.pickedBy === 0 ? 1 : 0;
+    // On picked maps, the team that did not pick the map chooses the side.
+    if (sidePickerIndex === undefined && this.pickedBy !== undefined) {
+      sidePickerIndex = this.pickedBy === 0 ? 1 : 0;
+    }
+
+    if (sidePickerIndex === undefined || this.pickedAttack === undefined) {
+      return "";
+    }
+
+    const defenderIndex: 0 | 1 = this.pickedAttack
+      ? sidePickerIndex === 0
+        ? 1
+        : 0
+      : sidePickerIndex;
+
+    return this.teams[defenderIndex]?.tricode ?? "";
   }
-
-  if (sidePickerIndex === undefined || this.pickedAttack === undefined) {
-    return "";
-  }
-
-  // If the side-picking team chose attack, the other team defends.
-  // If it chose defense, that same team defends.
-  const defenderIndex: 0 | 1 = this.pickedAttack
-    ? sidePickerIndex === 0
-      ? 1
-      : 0
-    : sidePickerIndex;
-
-  return this.teams[defenderIndex]?.tricode ?? "";
-}
 }

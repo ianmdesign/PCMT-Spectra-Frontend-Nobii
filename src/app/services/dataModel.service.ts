@@ -81,23 +81,6 @@ export class DataModelService {
   }
 
   private onMatchUpdate(data: any) {
-    // Temporary frontend hotpatch:
-    // Spectra Server v0.3.4 reports unknown maps as Corrode.
-    if (typeof data?.map === "string") {
-      data.map = this.applyLocalMapAlias(data.map);
-    }
-
-    // Apply the same hotpatch to past/future map entries in the series display.
-    const mapInfo = data?.tools?.seriesInfo?.mapInfo;
-
-    if (Array.isArray(mapInfo)) {
-      for (const entry of mapInfo) {
-        if (typeof entry?.map === "string") {
-          entry.map = this.applyLocalMapAlias(entry.map);
-        }
-      }
-    }
-
     // Capture the stock Spectra tools data before layering PCMT state over it.
     this.spectraNameOverrides = this.toOverrideMap(data?.tools?.nameOverrides?.overrides);
     this.spectraPlayercamsInfo = { ...(data?.tools?.playercamsInfo || { enable: false }) };
@@ -248,14 +231,6 @@ export class DataModelService {
 
   private normalizeRiotId(riotId: string): string {
     return (riotId || "").trim().toLocaleLowerCase();
-  }
-
-  private applyLocalMapAlias(mapName: string): string {
-    if (mapName.toLowerCase() === "corrode") {
-      return "Summit";
-    }
-
-    return mapName;
   }
 
   private toOverrideMap(value: any): Map<string, string> {
