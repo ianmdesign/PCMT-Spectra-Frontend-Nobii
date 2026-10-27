@@ -12,6 +12,7 @@ export class AgentRoleService {
 
 enum AgentRole {
   "Aggrobot" = "Initiator",
+  "AggroBot" = "Initiator",
   "BountyHunter" = "Initiator",
   "Breach" = "Initiator",
   "Cable" = "Sentinel",
@@ -27,6 +28,7 @@ enum AgentRole {
   "Mage" = "Controller",
   "Nox" = "Sentinel",
   "Pandemic" = "Controller",
+  "Paprika" = "Duelist",
   "Pine" = "Sentinel",
   "Phoenix" = "Duelist",
   "Rift" = "Controller",
