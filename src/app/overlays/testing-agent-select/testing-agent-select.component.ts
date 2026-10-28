@@ -621,7 +621,7 @@ export class TestingAgentSelectComponent implements OnInit, OnDestroy {
   }
 
   agentList = [
-    "AggroBot",
+    "Aggrobot",
     "BountyHunter",
     "Breach",
     "Cable",

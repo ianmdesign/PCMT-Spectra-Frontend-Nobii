@@ -5,7 +5,8 @@ import { Injectable } from "@angular/core";
 })
 export class AgentNameService {
   static getAgentName(agent: string) {
-    return AgentName[agent as keyof typeof AgentName];
+    const normalizedAgent = agent === "AggroBot" ? "Aggrobot" : agent;
+    return AgentName[normalizedAgent as keyof typeof AgentName];
   }
 
   static getAgentInternalName(agent: string) {
@@ -15,7 +16,6 @@ export class AgentNameService {
 }
 
 enum AgentName {
-  "AggroBot" = "Gekko",
   "Aggrobot" = "Gekko",
   "BountyHunter" = "Fade",
   "Breach" = "Breach",

@@ -83,6 +83,16 @@ export class DataModelService {
   }
 
   private onMatchUpdate(data: any) {
+    // Spectra now reports Gekko as AggroBot, but the existing assets use Aggrobot.
+    // Normalize once so every overlay uses the same on-disk asset names.
+    for (const team of data?.teams || []) {
+      for (const player of team?.players || []) {
+        if (player?.agentInternal === "AggroBot") {
+          player.agentInternal = "Aggrobot";
+        }
+      }
+    }
+
     // Capture the stock Spectra tools data before layering PCMT state over it.
     this.spectraNameOverrides = this.toOverrideMap(data?.tools?.nameOverrides?.overrides);
     this.spectraPlayercamsInfo = { ...(data?.tools?.playercamsInfo || { enable: false }) };
