@@ -149,7 +149,10 @@ export interface IWatermarkInfo {
   customText: string;
 }
 
+export type IPlayercamsListenIn = false | "left" | "right";
+
 export interface IPlayercamsInfo {
+  listenIn?: IPlayercamsListenIn;
   enable: boolean;
   removeTricodes?: boolean;
   identifier?: string;

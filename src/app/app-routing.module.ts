@@ -10,6 +10,20 @@ import { TimeoutComponent } from "./components/common/timeout/timeout.component"
 
 const routes: Routes = [
   {
+    path: "listen-in",
+    loadComponent: () =>
+      import("./overlays/listen-in-overlay/listen-in-overlay.component").then(
+        (m) => m.ListenInOverlayComponent,
+      ),
+  },
+  {
+    path: "testing/listen-in",
+    loadComponent: () =>
+      import("./overlays/testing-listen-in/testing-listen-in.component").then(
+        (m) => m.TestingListenInComponent,
+      ),
+  },
+  {
     path: "",
     component: RedirectComponent,
   },
@@ -68,9 +82,7 @@ const routes: Routes = [
       {
         path: "mapban",
         loadComponent: () =>
-          import("./overlays/testing-mapban/testing-mapban").then(
-            (m) => m.TestingMapban,
-          ),
+          import("./overlays/testing-mapban/testing-mapban").then((m) => m.TestingMapban),
       },
     ],
   },
@@ -106,7 +118,9 @@ const routes: Routes = [
   {
     path: "mapban-fs",
     loadComponent: () =>
-      import("./overlays/mapban-fs-overlay/mapban-fs-overlay.component").then((m) => m.MapbanFsOverlayComponent),
+      import("./overlays/mapban-fs-overlay/mapban-fs-overlay.component").then(
+        (m) => m.MapbanFsOverlayComponent,
+      ),
   },
   {
     path: "playercams",

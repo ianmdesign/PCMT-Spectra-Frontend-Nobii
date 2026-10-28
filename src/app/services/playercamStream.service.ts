@@ -1,8 +1,5 @@
-import { effect, inject, Injectable } from "@angular/core";
-import {
-  DomSanitizer,
-  SafeResourceUrl,
-} from "@angular/platform-browser";
+import { effect, inject, Injectable, signal } from "@angular/core";
+import { DomSanitizer, SafeResourceUrl } from "@angular/platform-browser";
 import { DataModelService } from "./dataModel.service";
 
 @Injectable({
@@ -21,6 +18,8 @@ export class PlayercamStreamService {
    * Tracks which player-camera session and stream mapping were used to
    * generate the currently cached VDO.Ninja URLs.
    */
+  private readonly audioStreams = new Map<string, SafeResourceUrl>();
+  private readonly revision = signal(0);
   private currentIdentifier = "";
   private currentStreamMappingSignature = "";
 
@@ -29,8 +28,7 @@ export class PlayercamStreamService {
       const teams = this.dataModel.teams();
       const playercamsInfo = this.dataModel.playercamsInfo();
       const identifier = playercamsInfo.identifier || "";
-      const streamMappings: Record<string, string> =
-        playercamsInfo.streamMappings || {};
+      const streamMappings: Record<string, string> = playercamsInfo.streamMappings || {};
       const normalizedStreamMappings = new Map<string, string>(
         Object.entries(streamMappings).map(([riotId, streamId]) => [
           this.normalizeRiotId(riotId),
@@ -38,9 +36,7 @@ export class PlayercamStreamService {
         ]),
       );
       const streamMappingSignature = JSON.stringify(
-        Array.from(normalizedStreamMappings.entries()).sort(([a], [b]) =>
-          a.localeCompare(b),
-        ),
+        Array.from(normalizedStreamMappings.entries()).sort(([a], [b]) => a.localeCompare(b)),
       );
 
       /*
@@ -55,6 +51,7 @@ export class PlayercamStreamService {
         this.currentIdentifier = identifier;
         this.currentStreamMappingSignature = streamMappingSignature;
         this.streams.clear();
+        this.audioStreams.clear();
       }
 
       /*
@@ -62,6 +59,7 @@ export class PlayercamStreamService {
        * session identifier.
        */
       if (!identifier) {
+        this.revision.update((value) => value + 1);
         return;
       }
 
@@ -86,27 +84,24 @@ export class PlayercamStreamService {
           const mappedStreamId = normalizedStreamMappings.get(
             this.normalizeRiotId(player.fullName),
           );
-          const streamId =
-            mappedStreamId || this.streamIdFromRiotId(player.fullName);
+          const streamId = mappedStreamId || this.streamIdFromRiotId(player.fullName);
 
           if (!streamId) {
-            console.warn(
-              `Cannot create player-camera URL for invalid Riot ID: ${player.fullName}`,
-            );
+            console.warn(`Cannot create player-camera URL for invalid Riot ID: ${player.fullName}`);
             continue;
           }
 
-          this.streams.set(
-            player.fullName,
-            this.createStreamUrl(identifier, streamId),
-          );
+          this.audioStreams.set(player.fullName, this.createStreamUrl(identifier, streamId, true));
+          this.streams.set(player.fullName, this.createStreamUrl(identifier, streamId));
         }
       }
+      this.revision.update((value) => value + 1);
     });
   }
 
-  getStream(playerFullName: string): SafeResourceUrl | undefined {
-    return this.streams.get(playerFullName);
+  getStream(playerFullName: string, audio = false): SafeResourceUrl | undefined {
+    this.revision();
+    return (audio ? this.audioStreams : this.streams).get(playerFullName);
   }
 
   hasStream(playerFullName: string): boolean {
@@ -132,10 +127,7 @@ export class PlayercamStreamService {
   private streamIdFromRiotId(playerFullName: string): string | undefined {
     const separatorIndex = playerFullName.lastIndexOf("#");
 
-    if (
-      separatorIndex <= 0 ||
-      separatorIndex === playerFullName.length - 1
-    ) {
+    if (separatorIndex <= 0 || separatorIndex === playerFullName.length - 1) {
       return undefined;
     }
 
@@ -144,10 +136,7 @@ export class PlayercamStreamService {
     return `${name.replaceAll(" ", "_")}_H_${tagline}`;
   }
 
-  private createStreamUrl(
-    identifier: string,
-    streamId: string,
-  ): SafeResourceUrl {
+  private createStreamUrl(identifier: string, streamId: string, audio = false): SafeResourceUrl {
     const url =
       `https://vdo.ninja/` +
       `?room=${encodeURIComponent(identifier)}` +
@@ -157,7 +146,7 @@ export class PlayercamStreamService {
       `&vb=2500` +
       `&transparent` +
       `&disablehotkeys` +
-      `&noaudio` +
+      (audio ? `&getloudness&mutespeaker` : `&noaudio`) +
       `&codec=h265,av1,h264,vp8`;
 
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);

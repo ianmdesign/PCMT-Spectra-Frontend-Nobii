@@ -1,0 +1,13 @@
+<app-listen-in-overlay></app-listen-in-overlay>
+
+<div class="testing-controls">
+  <button (click)="setListenIn('left')">Listen to Team Alpha</button>
+  <button (click)="setListenIn('right')">Listen to Team Omega</button>
+  <button (click)="setListenIn(false)">Hide Listen-In</button>
+</div>
+<div class="testing-connection-controls">
+  <button (click)="toggleDisconnected()">
+    {{ streams.disconnected() ? "Reconnect player 3" : "Disconnect player 3" }}
+  </button>
+  <span>Simulated feeds and speaking indicators. No live match or microphones.</span>
+</div>
