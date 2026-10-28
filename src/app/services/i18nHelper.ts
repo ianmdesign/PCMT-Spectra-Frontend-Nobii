@@ -1,11 +1,15 @@
 export class i18nHelper {
+  // Keys are lowercase because the lang param is lowercased before lookup.
   static LanguageAliases: Record<string, string> = {
     jp: "ja",
-    zh_CN: "zh_HANS",
+    zh_cn: "zh_HANS",
+    zh_hans: "zh_HANS",
+    zh_tw: "zh_HANT",
+    zh_hant: "zh_HANT",
   };
 
   public static resolveLanguageAlias(alias: string) {
-    return this.LanguageAliases[alias] || alias;
+    return this.LanguageAliases[alias.toLowerCase()] || alias;
   }
 }
 

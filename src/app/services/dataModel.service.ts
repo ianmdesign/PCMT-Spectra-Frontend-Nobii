@@ -38,6 +38,8 @@ export class DataModelService {
       console.log("Setting language to", paramLang);
       this.language.set(i18nHelper.resolveLanguageAlias(paramLang));
       this.translate.use(this.language());
+      // Use the active locale for CJK font fallbacks, including Chinese variants.
+      document.documentElement.lang = this.language().replace("_", "-");
       this.hideAuxiliary.set(params["hideAuxiliary"] === "true");
       this.hideAuxiliaryText.set(params["hideAuxiliaryText"] === "true");
     });

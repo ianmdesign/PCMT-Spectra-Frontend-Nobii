@@ -190,7 +190,7 @@ export class TestingAgentSelectComponent implements OnInit, OnDestroy {
               fullName: "Testg#ABC",
               playerId: 0,
               isAlive: true,
-              agentInternal: "Wushu",
+              agentInternal: "Paprika",
               locked: false,
               isObserved: false,
               armorName: "Heavy",
@@ -621,7 +621,7 @@ export class TestingAgentSelectComponent implements OnInit, OnDestroy {
   }
 
   agentList = [
-    "Aggrobot",
+    "AggroBot",
     "BountyHunter",
     "Breach",
     "Cable",
@@ -637,6 +637,7 @@ export class TestingAgentSelectComponent implements OnInit, OnDestroy {
     "Mage",
     "Nox",
     "Pandemic",
+    "Paprika",
     "Phoenix",
     "Rift",
     "Sarge",
