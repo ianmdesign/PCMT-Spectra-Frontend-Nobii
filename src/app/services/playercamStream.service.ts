@@ -23,8 +23,8 @@ export class PlayercamStreamService {
   private readonly authorizedAudioStreams = new Map<string, SafeResourceUrl>();
   private currentAudioMappingSignature = "";
   private readonly revision = signal(0);
+  private readonly streamKeys = new Map<string, string>();
   private currentIdentifier = "";
-  private currentStreamMappingSignature = "";
 
   constructor() {
     effect(() => {
@@ -38,23 +38,16 @@ export class PlayercamStreamService {
           streamId,
         ]),
       );
-      const streamMappingSignature = JSON.stringify(
-        Array.from(normalizedStreamMappings.entries()).sort(([a], [b]) => a.localeCompare(b)),
-      );
-
       /*
-       * If Spectra creates a different player-camera session, or PCMT changes
-       * a session-only Riot ID correction, the old room/stream URLs may no
-       * longer be valid. Clear them and rebuild the player feed URLs.
+       * A session change invalidates all existing VDO.Ninja URLs. A Riot ID
+       * correction does not: the actual publisher still uses its original
+       * stream ID. Leave unaffected viewers mounted during corrections.
        */
-      if (
-        identifier !== this.currentIdentifier ||
-        streamMappingSignature !== this.currentStreamMappingSignature
-      ) {
+      if (identifier !== this.currentIdentifier) {
         this.currentIdentifier = identifier;
-        this.currentStreamMappingSignature = streamMappingSignature;
         this.streams.clear();
         this.audioStreams.clear();
+        this.streamKeys.clear();
         this.authorizedAudioMappings.clear();
         this.authorizedAudioStreams.clear();
         this.currentAudioMappingSignature = "";
@@ -87,10 +80,6 @@ export class PlayercamStreamService {
        */
       for (const team of teams) {
         for (const player of team.players) {
-          if (this.streams.has(player.fullName)) {
-            continue;
-          }
-
           const mappedStreamId = normalizedStreamMappings.get(
             this.normalizeRiotId(player.fullName),
           );
@@ -101,8 +90,23 @@ export class PlayercamStreamService {
             continue;
           }
 
+          const streamKey = identifier + ":" + streamId;
+          if (this.streams.has(player.fullName) && this.streamKeys.get(player.fullName) === streamKey) {
+            continue;
+          }
+
+          this.streamKeys.set(player.fullName, streamKey);
           this.audioStreams.set(player.fullName, this.createStreamUrl(identifier, streamId, true));
           this.streams.set(player.fullName, this.createStreamUrl(identifier, streamId));
+        }
+      }
+      // Remove feeds for players who are no longer in the Spectra roster.
+      const rosterNames = new Set(teams.flatMap((team) => team.players.map((p) => p.fullName)));
+      for (const name of this.streamKeys.keys()) {
+        if (!rosterNames.has(name)) {
+          this.streamKeys.delete(name);
+          this.audioStreams.delete(name);
+          this.streams.delete(name);
         }
       }
       this.revision.update((value) => value + 1);
@@ -127,7 +131,9 @@ export class PlayercamStreamService {
     if (signature === this.currentAudioMappingSignature) return;
     this.currentAudioMappingSignature = signature;
     this.authorizedAudioMappings.clear();
-    this.authorizedAudioStreams.clear();
+    // Cache is keyed by the actual room and microphone stream ID, not by the
+    // editable Riot ID. Preserve active SafeResourceUrl identities so a
+    // correction doesn't reconnect unrelated Listen-In receivers.
     for (const [riotId, id] of Object.entries(raw || {})) {
       if (typeof id === "string" && /^pcmtmic_[a-f0-9]{40}$/.test(id)) {
         this.authorizedAudioMappings.set(this.normalizeRiotId(riotId), id);
