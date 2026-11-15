@@ -275,7 +275,7 @@
   overflow: hidden;
   opacity: 1;
   visibility: visible;
-  z-index: 60;
+  z-index: 80;
   animation: none !important;
   transform: none !important;
 }
