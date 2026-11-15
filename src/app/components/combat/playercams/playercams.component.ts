@@ -4,6 +4,7 @@ import { DataModelService } from "../../../services/dataModel.service";
 import { DisplayNameService } from "../../../services/displayName.service";
 import { PlayercamStreamService } from "../../../services/playercamStream.service";
 import { OneVersusOneService } from "../../../services/1v1.service";
+import { ListenInPresentationService } from "../../../services/listenInPresentation.service";
 
 @Component({
   selector: "app-playercams",
@@ -16,6 +17,15 @@ export class PlayercamsComponent {
   readonly streamService = inject(PlayercamStreamService);
   readonly oneVsOneService = inject(OneVersusOneService);
   readonly getDisplayName = inject(DisplayNameService).getDisplayName;
+  readonly listenIn = inject(ListenInPresentationService);
+  readonly listenInSide = this.listenIn.reuseSide;
+  readonly speaking = this.listenIn.speaking;
+
+  isListenInTeam(teamIndex: number): boolean {
+    const side = this.listenInSide();
+    return side === (teamIndex === 0 ? "left" : "right");
+  }
+
 
   // /overlay-freecam reuses this same persistent iframe pool, but suppresses
   // the normal observed-player camera. The two 1v1 survivor feeds are still

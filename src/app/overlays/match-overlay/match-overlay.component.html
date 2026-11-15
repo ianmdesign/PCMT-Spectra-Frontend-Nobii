@@ -23,3 +23,7 @@
 <app-timeout-new class="pos-x-center pos-y-250 absolute"></app-timeout-new>
 
 <app-live-toast class="pos-y-450 pos-x-center absolute"></app-live-toast>
+
+<!-- The primary OBS HUD owns Listen-In. Reuse the already-mounted playercam
+     iframe pool and connect only separate, privately authorized mic receivers. -->
+<app-listen-in-overlay [reusePlayercams]="true" class="pointer-events-none fixed inset-0 z-40"></app-listen-in-overlay>

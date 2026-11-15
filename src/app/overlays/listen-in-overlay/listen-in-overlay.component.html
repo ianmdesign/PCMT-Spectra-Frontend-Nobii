@@ -166,7 +166,7 @@
       @for (player of listenInPlayers(); track generation() + player.fullName) {
         <div class="flex">
           <div class="relative aspect-video h-43 w-57 overflow-hidden bg-black">
-            @if (!exiting() && getStream(player.fullName)) {
+            @if (!reusePlayercams() && !exiting() && getStream(player.fullName)) {
               <app-listen-in-iframe
                 [src]="getStream(player.fullName)"
                 [audible]="false"
@@ -182,9 +182,10 @@
                 />
               </div>
             }
-            @if (!connectedPlayers().has(player.fullName)) {
+            @if (!reusePlayercams() && !connectedPlayers().has(player.fullName)) {
               <span class="connection-status">Waiting for camera</span>
             }
+            @if (!reusePlayercams()) {
             <div
               class="absolute bottom-0 h-14 w-full bg-linear-to-t from-white/15 to-transparent"
             ></div>
@@ -198,6 +199,7 @@
               {{ getDisplayName(player.fullName, player.name) }}
             </span>
             <img class="absolute right-3 bottom-3 h-5 object-contain" [src]="teamUrl()" />
+            }
           </div>
         </div>
       }

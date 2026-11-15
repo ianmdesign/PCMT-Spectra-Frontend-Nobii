@@ -1,11 +1,12 @@
 @if (dataModel.playercamsInfo().identifier) {
   <div class="playercams-container">
-    @for (team of dataModel.teams(); track $index) {
-      @for (player of team.players; track player.fullName) {
+    @for (team of dataModel.teams(); track $index; let teamIndex = $index) {
+      @for (player of team.players; track player.fullName; let playerIndex = $index) {
         <div
           class="playercam-box bg-timer border-timer absolute box-border flex aspect-video h-48 flex-col justify-end overflow-hidden rounded-sm border-3"
           [class.playercam-active]="
             !isFreecamOverlay &&
+            !listenInSide() &&
             !isOneVersusOne() &&
             player.isObserved &&
             (
@@ -14,8 +15,11 @@
               dataModel.match().roundPhase === 'game_end'
             )
           "
-          [class.playercam-1v1-left]="isLeftOneVersusOnePlayer(player.fullName)"
-          [class.playercam-1v1-right]="isRightOneVersusOnePlayer(player.fullName)"
+          [class.playercam-1v1-left]="!listenInSide() && isLeftOneVersusOnePlayer(player.fullName)"
+          [class.playercam-1v1-right]="!listenInSide() && isRightOneVersusOnePlayer(player.fullName)"
+          [class.playercam-listen-in]="isListenInTeam(teamIndex) && playerIndex < 5"
+          [class.playercam-listen-in-speaking]="isListenInTeam(teamIndex) && speaking().has(player.fullName)"
+          [style.--listen-slot-offset.px]="playerIndex * 232"
         >
           <!--
             Team-logo fallback.
