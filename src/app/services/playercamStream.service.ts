@@ -133,8 +133,7 @@ export class PlayercamStreamService {
     if (!url) {
       url = this.sanitizer.bypassSecurityTrustResourceUrl(
         "https://vdo.ninja/?" +
-        "room=" + encodeURIComponent(identifier) +
-        "&view=" + encodeURIComponent(streamId) +
+        "view=" + encodeURIComponent(streamId) +
         "&solo&cleanoutput&getloudness&mutespeaker&disablehotkeys"
       );
       this.authorizedAudioStreams.set(key, url);
