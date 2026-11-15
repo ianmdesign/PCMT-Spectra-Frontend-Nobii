@@ -55,7 +55,9 @@ export class ListenInOverlayComponent implements OnDestroy {
     return JSON.stringify([
       side,
       info.identifier,
-      Object.entries(info.streamMappings || {}).sort(),
+      // Correcting a player's Riot ID changes stream mappings, not the
+      // selected team. Keep the Listen-In shell and existing mic viewers
+      // active while the corrected camera/audio mappings are applied.
       team?.players.slice(0, 5).map((p) => p.fullName),
     ]);
   });
