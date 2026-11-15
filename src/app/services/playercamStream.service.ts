@@ -140,7 +140,7 @@ export class PlayercamStreamService {
     this.revision();
     const info = this.dataModel.playercamsInfo();
     const identifier = info.identifier;
-    const room = info.listenInRoom || (identifier ? identifier + "-listenin" : "");
+    const room = info.listenInRoom || (identifier ? identifier + "_li" : "");
     const streamId = this.authorizedAudioMappings.get(this.normalizeRiotId(playerFullName));
     if (!room || !streamId) return undefined;
     const key = room + ":" + streamId;
