@@ -37,3 +37,21 @@
   font: 14px sans-serif;
   pointer-events: none;
 }
+
+/* Keep audio receivers live but never visible on the broadcast composition. */
+.listen-in-audio-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  left: 0;
+  top: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.listen-in-audio-only iframe {
+  width: 1px !important;
+  height: 1px !important;
+  min-width: 1px;
+  max-width: 1px;
+}

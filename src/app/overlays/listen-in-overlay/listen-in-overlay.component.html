@@ -169,10 +169,18 @@
             @if (!exiting() && getStream(player.fullName)) {
               <app-listen-in-iframe
                 [src]="getStream(player.fullName)"
-                [audible]="audioEnabled()"
+                [audible]="false"
                 (connectedChange)="onConnectedChange(player.fullName, $event)"
-                (loudness)="onLoudness(player.fullName, $event)"
               />
+            }
+            @if (!exiting() && getAudioStream(player.fullName)) {
+              <div class="listen-in-audio-only">
+                <app-listen-in-iframe
+                  [src]="getAudioStream(player.fullName)"
+                  [audible]="audioEnabled()"
+                  (loudness)="onLoudness(player.fullName, $event)"
+                />
+              </div>
             }
             @if (!connectedPlayers().has(player.fullName)) {
               <span class="connection-status">Waiting for camera</span>

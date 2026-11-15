@@ -19,6 +19,8 @@ export class PlayercamStreamService {
    * generate the currently cached VDO.Ninja URLs.
    */
   private readonly audioStreams = new Map<string, SafeResourceUrl>();
+  private readonly authorizedAudioMappings = new Map<string, string>();
+  private readonly authorizedAudioStreams = new Map<string, SafeResourceUrl>();
   private readonly revision = signal(0);
   private currentIdentifier = "";
   private currentStreamMappingSignature = "";
@@ -52,6 +54,8 @@ export class PlayercamStreamService {
         this.currentStreamMappingSignature = streamMappingSignature;
         this.streams.clear();
         this.audioStreams.clear();
+        this.authorizedAudioMappings.clear();
+        this.authorizedAudioStreams.clear();
       }
 
       /*
@@ -102,6 +106,39 @@ export class PlayercamStreamService {
   getStream(playerFullName: string, audio = false): SafeResourceUrl | undefined {
     this.revision();
     return (audio ? this.audioStreams : this.streams).get(playerFullName);
+  }
+
+  /**
+   * Mappings arrive only via an authenticated, read-only listener socket.
+   * The public HUD data never includes microphone stream identifiers.
+   */
+  setListenInAudioMappings(raw: Record<string, string>): void {
+    this.authorizedAudioMappings.clear();
+    this.authorizedAudioStreams.clear();
+    for (const [riotId, id] of Object.entries(raw || {})) {
+      if (typeof id === "string" && /^pcmtmic_[a-f0-9]{40}$/.test(id)) {
+        this.authorizedAudioMappings.set(this.normalizeRiotId(riotId), id);
+      }
+    }
+    this.revision.update((v) => v + 1);
+  }
+
+  getListenInAudioStream(playerFullName: string): SafeResourceUrl | undefined {
+    this.revision();
+    const identifier = this.dataModel.playercamsInfo().identifier;
+    const streamId = this.authorizedAudioMappings.get(this.normalizeRiotId(playerFullName));
+    if (!identifier || !streamId) return undefined;
+    const key = identifier + ":" + streamId;
+    let url = this.authorizedAudioStreams.get(key);
+    if (!url) {
+      url = this.sanitizer.bypassSecurityTrustResourceUrl(
+        "https://vdo.ninja/?" +
+        "view=" + encodeURIComponent(streamId) +
+        "&solo&cleanoutput&getloudness&mutespeaker&disablehotkeys"
+      );
+      this.authorizedAudioStreams.set(key, url);
+    }
+    return url;
   }
 
   hasStream(playerFullName: string): boolean {

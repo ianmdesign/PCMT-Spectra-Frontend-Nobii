@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, OnDestroy, signal, untracked } fro
 import { toSignal } from "@angular/core/rxjs-interop";
 import { ActivatedRoute } from "@angular/router";
 import { DataModelService } from "../../services/dataModel.service";
+import { SocketService } from "../../services/SocketService";
 import { PlayercamStreamService } from "../../services/playercamStream.service";
 import { IPlayercamsListenIn } from "../../services/Types";
 import { ListenInIframeComponent } from "../../components/listen-in-iframe/listen-in-iframe.component";
@@ -63,6 +64,17 @@ export class ListenInOverlayComponent implements OnDestroy {
   });
 
   constructor() {
+    // OBS's dedicated Listen-In source has a read-only token in its fragment.
+    // Normal public HUD sources have no token, and get no microphone mappings.
+    const token = new URLSearchParams(window.location.hash.slice(1)).get("listenToken");
+    if (token) {
+      SocketService.getInstance().authorizeListenIn(this.dataModel.groupCode(), token, data => {
+        const mappings = data?.listenIn === "left" || data?.listenIn === "right"
+          ? data?.audioStreamMappings
+          : {};
+        this.streams.setListenInAudioMappings(mappings && typeof mappings === "object" ? mappings : {});
+      });
+    }
     effect(() => {
       this.selectionKey();
       untracked(() => {
@@ -148,7 +160,12 @@ export class ListenInOverlayComponent implements OnDestroy {
     this.speaking.set(new Set());
   }
   getStream(player: string) {
-    return this.streams.getStream(player, true);
+    // Camera viewer is intentionally video-only. The microphone is a separate
+    // authorized feed and must never be mixed into normal playercam viewers.
+    return this.streams.getStream(player, false);
+  }
+  getAudioStream(player: string) {
+    return this.streams.getListenInAudioStream(player);
   }
   getDisplayName(player: string, fallback: string): string {
     return this.dataModel.resolveNameOverride(player, fallback);
