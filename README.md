@@ -64,7 +64,7 @@ After that you can start the frontend by running `docker compose up -d` and the 
 # PCMT Listen-In on the primary Spectra overlay
 
 Playercams publishes player microphone feeds into a dedicated VDO.Ninja room
-named `<session-room-id>-listenin`, separate from the visual playercam room.
+named `<session-room-id>_li`, separate from the visual playercam room.
 Each mic is a distinct audio-only feed with `deafen`, `novideo`, and
 `roombitrate=0` to suppress room multicast and prevent playback to players.
 
@@ -77,7 +77,7 @@ Visual tiles reuse the existing preloaded playercam video iframe elements.
 **No `#listenToken` is needed.** The visual HUD and audio receivers share the
 same normal source URL. Because stream IDs are now available to regular
 subscribers, **this architecture does not protect microphone audio against a
-party who learns the room and stream identifiers**. The `-listenin` suffix is
+party who learns the room and stream identifiers**. The `_li` suffix is
 not an access-control boundary; use only where this exposure is acceptable.
 
 The independent legacy `/listen-in` route remains supported. Audio still
