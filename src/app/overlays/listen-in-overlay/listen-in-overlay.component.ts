@@ -1,11 +1,10 @@
-import { Component, computed, effect, inject, OnDestroy, signal, untracked } from "@angular/core";
-import { toSignal } from "@angular/core/rxjs-interop";
-import { ActivatedRoute } from "@angular/router";
+import { Component, computed, effect, inject, input, OnDestroy, signal, untracked } from "@angular/core";
 import { DataModelService } from "../../services/dataModel.service";
 import { SocketService } from "../../services/SocketService";
 import { PlayercamStreamService } from "../../services/playercamStream.service";
 import { IPlayercamsListenIn } from "../../services/Types";
 import { ListenInIframeComponent } from "../../components/listen-in-iframe/listen-in-iframe.component";
+import { ListenInPresentationService } from "../../services/listenInPresentation.service";
 
 @Component({
   selector: "app-listen-in-overlay",
@@ -20,14 +19,13 @@ import { ListenInIframeComponent } from "../../components/listen-in-iframe/liste
 export class ListenInOverlayComponent implements OnDestroy {
   readonly dataModel = inject(DataModelService);
   private readonly streams = inject(PlayercamStreamService);
-  private readonly params = toSignal(inject(ActivatedRoute).queryParamMap);
+  private readonly presentation = inject(ListenInPresentationService);
+  readonly reusePlayercams = input(false);
   private readonly pageVisible = signal(!document.hidden);
   private readonly obsVisible = signal(true);
   private readonly requestedSide = computed<IPlayercamsListenIn>(() => {
     if (!this.pageVisible() || !this.obsVisible()) return false;
-    const override = this.params()?.get("team")?.toLowerCase();
-    if (override === "false" || override === "none") return false;
-    if (override === "left" || override === "right") return override;
+    // Query parameters must never override production Off / team selection.
     const side = this.dataModel.playercamsInfo().listenIn;
     return side === "left" || side === "right" ? side : false;
   });
@@ -37,7 +35,7 @@ export class ListenInOverlayComponent implements OnDestroy {
   readonly audioEnabled = signal(false);
   readonly generation = signal(0);
   readonly connectedPlayers = signal<ReadonlySet<string>>(new Set());
-  readonly speaking = signal<ReadonlySet<string>>(new Set());
+  readonly speaking = this.presentation.speaking;
   private readonly speakingTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private revealTimer?: ReturnType<typeof setTimeout>;
   private exitTimer?: ReturnType<typeof setTimeout>;
@@ -64,8 +62,9 @@ export class ListenInOverlayComponent implements OnDestroy {
   });
 
   constructor() {
-    // OBS's dedicated Listen-In source has a read-only token in its fragment.
-    // Normal public HUD sources have no token, and get no microphone mappings.
+    // Only a private OBS source carrying #listenToken receives microphone IDs.
+    // The same credential also works on the primary HUD; it is never sent in
+    // the ordinary public PCMT tools subscription.
     const token = new URLSearchParams(window.location.hash.slice(1)).get("listenToken");
     if (token) {
       SocketService.getInstance().authorizeListenIn(this.dataModel.groupCode(), token, data => {
@@ -83,6 +82,7 @@ export class ListenInOverlayComponent implements OnDestroy {
         this.audioEnabled.set(false);
         this.clearSpeaking();
         const side = this.requestedSide();
+        this.presentation.reuseSide.set(this.reusePlayercams() ? side : false);
         if (!side) {
           if (!this.renderedSide()) return;
           this.exiting.set(true);
@@ -95,14 +95,16 @@ export class ListenInOverlayComponent implements OnDestroy {
         this.connectedPlayers.set(new Set());
         this.generation.update((value) => value + 1);
         this.renderedSide.set(side);
-        // A missing camera must never hold the entire panel off air indefinitely.
-        this.revealTimer = setTimeout(() => this.revealed.set(true), 2500);
+        // Primary HUD video is already mounted; do not wait for new video
+        // connections. Standalone Listen-In retains its connection fallback.
+        if (this.reusePlayercams()) this.revealed.set(true);
+        else this.revealTimer = setTimeout(() => this.revealed.set(true), 2500);
       });
     });
     effect(() => {
       const players = this.listenInPlayers();
       const connected = this.connectedPlayers();
-      if (players.length && players.every((player) => connected.has(player.fullName))) {
+      if (!this.reusePlayercams() && players.length && players.every((player) => connected.has(player.fullName))) {
         this.revealed.set(true);
         clearTimeout(this.revealTimer);
       }
@@ -137,7 +139,7 @@ export class ListenInOverlayComponent implements OnDestroy {
     if (!connected) this.stopSpeaking(player);
   }
   onLoudness(player: string, loudness: number): void {
-    if (!this.audioEnabled() || !this.connectedPlayers().has(player) || loudness <= 10) return;
+    if (!this.audioEnabled() || (!this.reusePlayercams() && !this.connectedPlayers().has(player)) || loudness <= 10) return;
     clearTimeout(this.speakingTimers.get(player));
     this.speaking.update((current) => new Set(current).add(player));
     this.speakingTimers.set(
@@ -174,5 +176,7 @@ export class ListenInOverlayComponent implements OnDestroy {
     clearTimeout(this.revealTimer);
     clearTimeout(this.exitTimer);
     this.clearSpeaking();
+    if (this.reusePlayercams()) this.presentation.hide();
+    this.streams.setListenInAudioMappings({});
   }
 }
