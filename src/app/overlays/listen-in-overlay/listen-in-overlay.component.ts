@@ -1,6 +1,5 @@
 import { Component, computed, effect, inject, input, OnDestroy, signal, untracked } from "@angular/core";
 import { DataModelService } from "../../services/dataModel.service";
-import { SocketService } from "../../services/SocketService";
 import { PlayercamStreamService } from "../../services/playercamStream.service";
 import { IPlayercamsListenIn } from "../../services/Types";
 import { ListenInIframeComponent } from "../../components/listen-in-iframe/listen-in-iframe.component";
@@ -62,18 +61,8 @@ export class ListenInOverlayComponent implements OnDestroy {
   });
 
   constructor() {
-    // Only a private OBS source carrying #listenToken receives microphone IDs.
-    // The same credential also works on the primary HUD; it is never sent in
-    // the ordinary public PCMT tools subscription.
-    const token = new URLSearchParams(window.location.hash.slice(1)).get("listenToken");
-    if (token) {
-      SocketService.getInstance().authorizeListenIn(this.dataModel.groupCode(), token, data => {
-        const mappings = data?.listenIn === "left" || data?.listenIn === "right"
-          ? data?.audioStreamMappings
-          : {};
-        this.streams.setListenInAudioMappings(mappings && typeof mappings === "object" ? mappings : {});
-      });
-    }
+    // Microphone mappings arrive through regular PCMT state only for the
+    // producer-selected team. No separate listen-in token or socket is needed.
     effect(() => {
       this.selectionKey();
       untracked(() => {
@@ -177,6 +166,5 @@ export class ListenInOverlayComponent implements OnDestroy {
     clearTimeout(this.exitTimer);
     this.clearSpeaking();
     if (this.reusePlayercams()) this.presentation.hide();
-    this.streams.setListenInAudioMappings({});
   }
 }

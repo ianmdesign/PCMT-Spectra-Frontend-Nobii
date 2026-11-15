@@ -63,31 +63,26 @@ After that you can start the frontend by running `docker compose up -d` and the 
 
 # PCMT Listen-In on the primary Spectra overlay
 
-PCMT Playercams now controls the **existing `/overlay` OBS browser source**. Its
-`listenIn` state (`false`, `left`, or `right`) selects the team and reveals the
-Listen-In panel directly on the main HUD. Left / Right reuse the original,
-already-mounted playercam iframe elements; switching teams does not open
-duplicate video receivers. Audio comes from distinct, opt-in microphone-only
-VDO.Ninja streams.
+Playercams publishes player microphone feeds into a dedicated VDO.Ninja room
+named `<session-room-id>-listenin`, separate from the visual playercam room.
+Each mic is a distinct audio-only feed with `deafen`, `novideo`, and
+`roombitrate=0` to suppress room multicast and prevent playback to players.
 
-**For private Listen-In audio**, the main OBS browser-source URL must include
-the Playercams producer dashboard's read-only `listenToken` in its fragment:
+The producer's Left / Right / Off controls update the normal PCMT HUD
+`playercamsInfo` state. The primary `/overlay?groupCode=CODE` source receives
+only the stream IDs belonging to opted-in players on the selected team. It
+then creates separate audio-only VDO.Ninja receivers with `room` and `view`.
+Visual tiles reuse the existing preloaded playercam video iframe elements.
 
-```text
-https://YOUR-SPECTRA-HOST/overlay?groupCode=YOUR-GROUP#listenToken=PRIVATE_READ_ONLY_TOKEN
-```
+**No `#listenToken` is needed.** The visual HUD and audio receivers share the
+same normal source URL. Because stream IDs are now available to regular
+subscribers, **this architecture does not protect microphone audio against a
+party who learns the room and stream identifiers**. The `-listenin` suffix is
+not an access-control boundary; use only where this exposure is acceptable.
 
-The fragment is intentionally absent from public/shared overlay URLs and is
-not sent to the web server via HTTP. Protect the entire OBS source URL as a
-secret. Without this fragment, the playercam visuals and Listen-In panel still
-follow producer controls, **but microphone audio is unavailable**. Set up this
-token only in the private OBS browser source, never a public webpage.
-
-Listen-In Off immediately removes the microphone receivers. Spectra's own
-playercam visuals remain connected; the producer may separately control when
-the playercam overlay is enabled. The separate `/listen-in` route is retained
-for dedicated/legacy OBS layouts, but is no longer required for the main HUD.
-URL `?team=` overrides are not accepted on production overlays.
+The independent legacy `/listen-in` route remains supported. Audio still
+needs a successful VDO.Ninja WebRTC connection and OBS browser-source audio
+capture. Validate mute and volume in OBS before using it on-air.
 
 # DISCLAIMER
 

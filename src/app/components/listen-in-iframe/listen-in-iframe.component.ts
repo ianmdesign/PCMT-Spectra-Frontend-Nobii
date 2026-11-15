@@ -45,7 +45,9 @@ export class ListenInIframeComponent implements OnDestroy {
   }
   syncAudio(): void {
     this.frame()?.nativeElement.contentWindow?.postMessage(
-      { mute: !(this.audible() && this.connected()) },
+      // Connection events are not guaranteed to be emitted to every viewer.
+      // Audio must follow the producer's selected state, not telemetry.
+      { mute: !this.audible() },
       this.mock ? "*" : "https://vdo.ninja",
     );
   }

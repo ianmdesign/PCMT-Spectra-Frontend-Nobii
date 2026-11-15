@@ -160,6 +160,8 @@ export interface IPlayercamsInfo {
   endTime?: number;
   enabledPlayers?: string[];
   streamMappings?: Record<string, string>;
+  listenInRoom?: string;
+  audioStreamMappings?: Record<string, string>;
 }
 
 export interface INameOverrides {

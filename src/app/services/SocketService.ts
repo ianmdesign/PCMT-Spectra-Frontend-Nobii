@@ -11,8 +11,6 @@ export class SocketService {
 
   pcmtToolsSocket!: io.Socket;
   pcmtToolsSubscribers: Function[] = [];
-  private listenInSubscriber: ((data: any) => void) | null = null;
-  private listenInAuth: { groupCode: string; token: string } | null = null;
   private pcmtLastRoster: { groupCode: string; teams: any[] } | null = null;
   private pcmtLastRosterSignature = "";
 
@@ -116,9 +114,6 @@ export class SocketService {
 
     const logon = () => {
       this.pcmtToolsSocket.emit("frontend_logon", { groupCode });
-      if (this.listenInAuth?.groupCode === groupCode) {
-        this.pcmtToolsSocket.emit("listen_in_logon", this.listenInAuth);
-      }
       if (this.pcmtLastRoster) {
         this.pcmtToolsSocket.emit("frontend_roster", {
           ...this.pcmtLastRoster,
@@ -131,30 +126,12 @@ export class SocketService {
     this.pcmtToolsSocket.on("pcmt_tools_data", (data: any) => {
       this.pcmtToolsSubscribers.forEach((subscriber) => subscriber(data));
     });
-    // This separate event is never emitted to an anonymous HUD subscription.
-    this.pcmtToolsSocket.on("pcmt_listen_in_data", (data: any) => {
-      this.listenInSubscriber?.(data);
-    });
 
     this.pcmtToolsSocket.io.on("reconnect_attempt", (attempt: number) => {
       console.log(`PCMT Tools connection lost, attempting to reconnect (Attempt: ${attempt})`);
     });
 
     return this;
-  }
-
-  /**
-   * Authorize only the dedicated OBS Listen-In browser source. Its read-only
-   * session token is carried in the browser URL fragment, not the public HUD
-   * config or regular Socket.IO frontend_logon payload.
-   */
-  public authorizeListenIn(groupCode: string, token: string, handler: (data: any) => void) {
-    if (!token || !this.pcmtToolsSocket) return;
-    this.listenInAuth = { groupCode, token };
-    this.listenInSubscriber = handler;
-    if (this.pcmtToolsSocket.connected) {
-      this.pcmtToolsSocket.emit("listen_in_logon", this.listenInAuth);
-    }
   }
 
   public sendPcmtRoster(groupCode: string, teams: any[]) {

@@ -21,6 +21,7 @@ export class PlayercamStreamService {
   private readonly audioStreams = new Map<string, SafeResourceUrl>();
   private readonly authorizedAudioMappings = new Map<string, string>();
   private readonly authorizedAudioStreams = new Map<string, SafeResourceUrl>();
+  private currentAudioMappingSignature = "";
   private readonly revision = signal(0);
   private currentIdentifier = "";
   private currentStreamMappingSignature = "";
@@ -56,7 +57,12 @@ export class PlayercamStreamService {
         this.audioStreams.clear();
         this.authorizedAudioMappings.clear();
         this.authorizedAudioStreams.clear();
+        this.currentAudioMappingSignature = "";
       }
+
+      // The selected-team audio mappings are now part of ordinary PCMT tools
+      // state. Changes only rebuild mic viewers when identities actually change.
+      this.setListenInAudioMappings(playercamsInfo.audioStreamMappings || {});
 
       /*
        * A VDO.Ninja room URL cannot be created until Spectra supplies a valid
@@ -109,10 +115,17 @@ export class PlayercamStreamService {
   }
 
   /**
-   * Mappings arrive only via an authenticated, read-only listener socket.
-   * The public HUD data never includes microphone stream identifiers.
+   * Audio is exposed to this HUD via PCMT selected-team mappings. Only
+   * explicitly opted-in players on the selected team should be present.
    */
   setListenInAudioMappings(raw: Record<string, string>): void {
+    const valid = Object.entries(raw || {})
+      .filter(([, id]) => typeof id === "string" && /^pcmtmic_[a-f0-9]{40}$/.test(id))
+      .map(([riotId, id]) => [this.normalizeRiotId(riotId), id] as const)
+      .sort(([a], [b]) => a.localeCompare(b));
+    const signature = JSON.stringify(valid);
+    if (signature === this.currentAudioMappingSignature) return;
+    this.currentAudioMappingSignature = signature;
     this.authorizedAudioMappings.clear();
     this.authorizedAudioStreams.clear();
     for (const [riotId, id] of Object.entries(raw || {})) {
@@ -125,15 +138,18 @@ export class PlayercamStreamService {
 
   getListenInAudioStream(playerFullName: string): SafeResourceUrl | undefined {
     this.revision();
-    const identifier = this.dataModel.playercamsInfo().identifier;
+    const info = this.dataModel.playercamsInfo();
+    const identifier = info.identifier;
+    const room = info.listenInRoom || (identifier ? identifier + "-listenin" : "");
     const streamId = this.authorizedAudioMappings.get(this.normalizeRiotId(playerFullName));
-    if (!identifier || !streamId) return undefined;
-    const key = identifier + ":" + streamId;
+    if (!room || !streamId) return undefined;
+    const key = room + ":" + streamId;
     let url = this.authorizedAudioStreams.get(key);
     if (!url) {
       url = this.sanitizer.bypassSecurityTrustResourceUrl(
         "https://vdo.ninja/?" +
-        "view=" + encodeURIComponent(streamId) +
+        "room=" + encodeURIComponent(room) +
+        "&view=" + encodeURIComponent(streamId) +
         "&solo&cleanoutput&getloudness&mutespeaker&disablehotkeys"
       );
       this.authorizedAudioStreams.set(key, url);
