@@ -90,27 +90,28 @@ Spectra-Frontend isn't endorsed by Riot Games and doesn't reflect the views or o
 
 ## Producer-operated Spectra HUD during a detection outage
 
-Keep the Valorant observer client connected even when Spectra's automatic event
-detection fails. The client remains the source of truth for teams, logos,
-attack/defense assignments, player health/economy/kills, round phase and playercams.
-Production Control overrides **only** the displayed round number/score, player
-scoreboard visibility, spike event graphics and explicit round-winbox ceremonies.
-The producer interface does not contain a side-selection control.
+Keep the Valorant observer client connected. The client remains authoritative
+for team identity, Attack/Defense sides, player telemetry and playercams.
+The producer controls scores, displayed round, player scoreboard visibility,
+spike graphic and round-winbox presentation through PCMT Production Control.
 
-Configure `pcmtProductionEndpoint` with the Production Control public HTTPS URL.
-Use **Apply Spectra to OBS** so the existing main `/overlay` source has
-`pcmtShow=<SHOW_CODE>`. The overlay polls the show-scoped read-only endpoint
-`/api/hud/manual-state`; the backend must allow the overlay's exact HTTPS origin.
-Everything else remains a normal connected Spectra browser source.
+Use **Apply Spectra to OBS** to attach `pcmtShow=<SHOW_CODE>` to the normal
+Spectra main source. The frontend polls the show-scoped, read-only producer
+endpoint over HTTPS. No replacement browser source is required.
 
-When overrides are enabled, producer buttons show/hide the live-player scoreboard,
-plant/detonate/defuse/clear the spike, or trigger a round-winbox for a chosen winner
-and ceremony type (Round Win, Ace, Clutch, Team Ace, Flawless, Thrifty).
-Unique winbox event IDs allow repeated triggers in one round; animations do not
-depend on automatic end-of-round detection. The winbox's attack/defense label
-comes from the client's actual side assignment. Spike animation retains the
-45-second planted timestamp. Advancing/awarding the round clears transient
-spike/winbox events. Disabling overrides restores the normal live Spectra HUD.
+Click **Left wins round** or **Right wins round** to update the score and
+trigger the selected Round Win / Ace / Clutch / Team Ace / Flawless / Thrifty
+ceremony immediately. The displayed round changes **seven seconds later**.
+The server persists the scheduled advance and rejects duplicate awards while
+one is pending. Manual round corrections or reset cancel the pending advance.
+The original winbox animation and its configured visuals remain in use; the
+client controls the winner's Attack/Defense assignment.
 
-Deploy the companion Production Control backend before this frontend, and
-verify the full workflow in OBS before putting it on air.
+**Plant spike** starts or restarts the 45-second pulse sequence, including
+when there are no new Spectra gameplay packets. It uses reactive signal ticks
+and the server's plant timestamp, avoiding restart on browser refresh. **Clear
+spike** ends the animation for either detonation or defusal. Planting again
+while already planted restarts the 45-second visual. A round win clears it too.
+The old separate winbox, winbox-clear, detonate and defuse buttons are gone.
+
+Deploy Production Control before this companion frontend and verify in OBS.
