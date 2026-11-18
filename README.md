@@ -87,3 +87,28 @@ capture. Validate mute and volume in OBS before using it on-air.
 # DISCLAIMER
 
 Spectra-Frontend isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.
+
+## Emergency PCMT manual HUD
+
+PCMT Production Control can drive the existing main Spectra HUD without a connected
+Valorant observer client. Use its Spectra section to set both teams, choose which
+team starts on Attack, enable emergency mode, update scores and rounds, or manually
+plant / detonate / defuse / clear a spike.
+
+Configure `pcmtProductionEndpoint` for the public HTTPS Production Control service.
+Apply Spectra settings to OBS again; only the main `/overlay` source gains the
+`pcmtShow=<SHOW_CODE>` query parameter. It polls the read-only, Show Code-scoped
+`/api/hud/manual-state` endpoint, independent of Spectra's match socket. The
+production backend must allow the frontend's exact origin; extra origins can be
+configured with `PCMT_HUD_ALLOWED_ORIGINS`.
+
+Round 13 reverses initial attack/defense sides; round 25 reverses again, and each
+later overtime round alternates. Manual spike planting triggers the existing
+45-second animation using its original planted timestamp. Detonation, defusal
+and advancing/awarding rounds clear the planted indicator. Normal Spectra
+match packets remain intact and are restored when manual mode is disabled.
+Player-dependent widgets are suppressed while manual mode is active because
+observer telemetry is unavailable or potentially stale.
+
+Deploy Production Control first, then this frontend. Nothing here requires a
+separate OBS browser source.
