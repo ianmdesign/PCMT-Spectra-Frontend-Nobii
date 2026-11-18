@@ -23,6 +23,8 @@ export class EndroundBannerComponent {
 
   lastInRoundNumber = -1;
   lastOutRoundNumber = -1;
+  private lastManualWinBoxId = "";
+  private animationSequence = 0;
 
   TranslateKeys = TranslateKeys;
 
@@ -209,63 +211,85 @@ export class EndroundBannerComponent {
   }
 
   _ref = effect(() => {
-    const roundPhase = this.dataModel.match().roundPhase;
-    const roundNumber = this.dataModel.match().roundNumber;
+    const match = this.dataModel.match();
+    const roundPhase = match.roundPhase;
+    const roundNumber = match.roundNumber;
+    const manual = match.manualHudEnabled === true;
+    const event = manual ? match.manualWinBoxEvent : null;
 
-    this.calculateClutch();
+    if (manual) {
+      if (!event) {
+        if (this.lastManualWinBoxId) {
+          this.animationSequence++;
+          this.hide = true;
+          this.lastManualWinBoxId = "";
+        }
+        return;
+      }
+      // Events have unique IDs. A long-lived persisted event must not replay
+      // when an OBS browser source is refreshed well after the animation.
+      if (event.id === this.lastManualWinBoxId || Date.now() - event.triggeredAt > 7500) return;
+      this.lastManualWinBoxId = event.id;
+    } else {
+      this.lastManualWinBoxId = "";
+      this.calculateClutch();
+      if (roundPhase === "end") {
+        if (roundNumber === this.lastInRoundNumber) return;
+        this.lastInRoundNumber = roundNumber;
+      } else if (roundPhase === "shopping") {
+        if (roundNumber === this.lastOutRoundNumber) return;
+        this.lastOutRoundNumber = roundNumber;
+        setTimeout(() => { this.hide = true; }, 3000);
+        return;
+      } else return;
+    }
 
-    if (roundPhase === "end") {
-      if (roundNumber === this.lastInRoundNumber) return;
-      this.lastInRoundNumber = roundNumber;
+    const sequence = ++this.animationSequence;
+    this.hide = false;
+    this.showAnimation = false;
+    this.showRevealSquares = false;
+    this.showReverseSquares = false;
+    this.clipClosed = true;
+    this.clipClosing = false;
 
-      this.hide = false;
+    const kindToKey = {
+      normal: TranslateKeys.Endround_RoundWin,
+      ace: TranslateKeys.Endround_RoundAce,
+      clutch: TranslateKeys.Endround_RoundClutch,
+      teamAce: TranslateKeys.Endround_RoundTeamAce,
+      flawless: TranslateKeys.Endround_RoundFlawless,
+      thrifty: TranslateKeys.Endround_RoundThrifty,
+    };
 
-      // Prepare reveal by collapsing banner clip and resetting squares
-      this.showAnimation = false;
-      this.showRevealSquares = false;
-      this.showReverseSquares = false;
-      this.clipClosed = true;
-      this.clipClosing = false;
-
-      // Delay animation start until layout & paint settle
+    requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
+          setTimeout(() => {
+            if (sequence !== this.animationSequence) return;
+            this.roundWonType.set(event ? kindToKey[event.kind] : this.calculateRoundWonType());
+
+            this.showAnimation = true;
+            this.showRevealSquares = true;
+
             setTimeout(() => {
-              this.roundWonType.set(this.calculateRoundWonType());
+              if (sequence !== this.animationSequence) return;
+              this.clipClosing = true;
+              this.showReverseSquares = true;
 
-              this.showAnimation = true;
-              this.showRevealSquares = true;
-
-              // After initial animations complete (550ms reveal-text/background completes)
-              // Wait 5.66 seconds, then trigger reverse animation
               setTimeout(() => {
-                this.clipClosing = true;
-                this.showReverseSquares = true;
-
-                // Hide component after reverse animation completes (500ms)
-                setTimeout(() => {
-                  this.hide = true;
-                  this.showAnimation = false;
-                  this.showRevealSquares = false;
-                  this.showReverseSquares = false;
-                  this.clipClosed = false;
-                  this.clipClosing = false;
-
-                  this.clutch = [-1, -1];
-                }, 260);
-              }, 550 + 5660); // 550ms (reveal complete) + 5660ms delay
-            }, 200);
-          });
+                if (sequence !== this.animationSequence) return;
+                this.hide = true;
+                this.showAnimation = false;
+                this.showRevealSquares = false;
+                this.showReverseSquares = false;
+                this.clipClosed = false;
+                this.clipClosing = false;
+                this.clutch = [-1, -1];
+              }, 260);
+            }, 550 + 5660);
+          }, 200);
         });
       });
-    } else if (roundPhase === "shopping") {
-      if (roundNumber === this.lastOutRoundNumber) return;
-      this.lastOutRoundNumber = roundNumber;
-
-      setTimeout(() => {
-        this.hide = true;
-      }, 3000); // Show for 3 seconds before hiding
-    }
+    });
   });
 }

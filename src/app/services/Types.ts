@@ -16,6 +16,14 @@ export interface IMatchData {
   attackersWon: boolean;
   agentSelectStartTime: number;
   manualSpikePlantedAt?: number | null;
+  manualHudEnabled?: boolean;
+  manualScoreboardVisible?: boolean;
+  manualWinBoxEvent?: {
+    id: string;
+    winner: "left" | "right";
+    kind: "normal" | "ace" | "clutch" | "teamAce" | "flawless" | "thrifty";
+    triggeredAt: number;
+  } | null;
   toastInfo: IToastInfo;
 }
 

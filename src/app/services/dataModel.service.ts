@@ -202,40 +202,42 @@ export class DataModelService {
   }
 
   private publishEffectiveMatch() {
+    // The observer client remains authoritative for team identity, attack/defense
+    // assignments, player telemetry and round phase, even during producer override.
     const base = this.lastSpectraMatch ?? this.offlineBaseMatch;
     const state = this.manualHud;
     if (!state?.enabled) {
       this.match.set(base);
       return;
     }
-    const round = state.round;
-    const firstAttack = state.startingAttacker === "left";
-    // Round 13 swaps; round 25 swaps again; each OT round alternates.
-    const leftAttacking = round <= 12 ? firstAttack
-      : round <= 24 ? !firstAttack
-      : round % 2 === 1 ? firstAttack : !firstAttack;
-    const teams = [0, 1].map((index) => ({
-      ...(base.teams[index] || initialMatchData.teams[index]),
-      teamName: state.teams?.[index]?.teamName || base.teams[index]?.teamName || "",
-      teamTricode: state.teams?.[index]?.teamTricode || base.teams[index]?.teamTricode || "",
-      teamUrl: state.teams?.[index]?.teamUrl || base.teams[index]?.teamUrl || "",
-      roundsWon: index === 0 ? state.leftScore : state.rightScore,
-      isAttacking: index === 0 ? leftAttacking : !leftAttacking,
-      players: [],
-      roundRecord: [],
-    }));
+
+    const round = Number.isInteger(state.round) ? state.round : base.roundNumber;
     const planted = state.spike === "planted" && typeof state.plantedAt === "number" &&
       Date.now() - state.plantedAt < 45000;
+    const event = state.winBox && typeof state.winBox.id === "string"
+      ? state.winBox : null;
+    const leftAttacks = base.teams[0]?.isAttacking ?? false;
+
     this.match.set({
-      ...base, teams, roundNumber: round, roundPhase: "combat",
-      switchRound: 12, firstOtRound: 25,
+      ...base,
+      roundNumber: round,
+      // Scores only; no mutation of client sides, names, agents or player stats.
+      teams: base.teams.map((team, index) => ({
+        ...team,
+        roundsWon: index === 0 ? state.leftScore : index === 1 ? state.rightScore : team.roundsWon,
+      })),
+      manualHudEnabled: true,
+      manualScoreboardVisible: state.scoreboardVisible === true,
+      manualWinBoxEvent: event,
       manualSpikePlantedAt: planted ? state.plantedAt : null,
+      // Only the spike event itself is producer-driven; the match phase remains live.
       spikeState: {
         planted,
         detonated: state.spike === "detonated" || (state.spike === "planted" && !planted),
         defused: state.spike === "defused",
       },
-      attackersWon: false,
+      // The round winbox takes the winner's *current client-side* assignment.
+      attackersWon: event ? (event.winner === "left" ? leftAttacks : !leftAttacks) : base.attackersWon,
     });
   }
 
@@ -418,7 +420,14 @@ export class DataModelService {
   public playercamsInfo = computed(() => this.match().tools.playercamsInfo, {
     equal: () => false,
   });
-  public readonly roundWinBox = computed(() => this.match().tools.roundWinBox);
+  public readonly roundWinBox = computed(() => {
+    const box = this.match().tools.roundWinBox;
+    // The producer can trigger the normal winbox animation even when Spectra's
+    // own round-win box is disabled. Keep configured sponsor graphics otherwise.
+    return this.match().manualHudEnabled && this.match().manualWinBoxEvent &&
+      box.type === "disabled"
+      ? { ...box, type: "tournamentInfo" as const } : box;
+  });
 
   public mapban = signal<IMapbanSessionData>(initialMapbanData, { equal: () => false });
 }

@@ -88,27 +88,29 @@ capture. Validate mute and volume in OBS before using it on-air.
 
 Spectra-Frontend isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.
 
-## Emergency PCMT manual HUD
+## Producer-operated Spectra HUD during a detection outage
 
-PCMT Production Control can drive the existing main Spectra HUD without a connected
-Valorant observer client. Use its Spectra section to set both teams, choose which
-team starts on Attack, enable emergency mode, update scores and rounds, or manually
-plant / detonate / defuse / clear a spike.
+Keep the Valorant observer client connected even when Spectra's automatic event
+detection fails. The client remains the source of truth for teams, logos,
+attack/defense assignments, player health/economy/kills, round phase and playercams.
+Production Control overrides **only** the displayed round number/score, player
+scoreboard visibility, spike event graphics and explicit round-winbox ceremonies.
+The producer interface does not contain a side-selection control.
 
-Configure `pcmtProductionEndpoint` for the public HTTPS Production Control service.
-Apply Spectra settings to OBS again; only the main `/overlay` source gains the
-`pcmtShow=<SHOW_CODE>` query parameter. It polls the read-only, Show Code-scoped
-`/api/hud/manual-state` endpoint, independent of Spectra's match socket. The
-production backend must allow the frontend's exact origin; extra origins can be
-configured with `PCMT_HUD_ALLOWED_ORIGINS`.
+Configure `pcmtProductionEndpoint` with the Production Control public HTTPS URL.
+Use **Apply Spectra to OBS** so the existing main `/overlay` source has
+`pcmtShow=<SHOW_CODE>`. The overlay polls the show-scoped read-only endpoint
+`/api/hud/manual-state`; the backend must allow the overlay's exact HTTPS origin.
+Everything else remains a normal connected Spectra browser source.
 
-Round 13 reverses initial attack/defense sides; round 25 reverses again, and each
-later overtime round alternates. Manual spike planting triggers the existing
-45-second animation using its original planted timestamp. Detonation, defusal
-and advancing/awarding rounds clear the planted indicator. Normal Spectra
-match packets remain intact and are restored when manual mode is disabled.
-Player-dependent widgets are suppressed while manual mode is active because
-observer telemetry is unavailable or potentially stale.
+When overrides are enabled, producer buttons show/hide the live-player scoreboard,
+plant/detonate/defuse/clear the spike, or trigger a round-winbox for a chosen winner
+and ceremony type (Round Win, Ace, Clutch, Team Ace, Flawless, Thrifty).
+Unique winbox event IDs allow repeated triggers in one round; animations do not
+depend on automatic end-of-round detection. The winbox's attack/defense label
+comes from the client's actual side assignment. Spike animation retains the
+45-second planted timestamp. Advancing/awarding the round clears transient
+spike/winbox events. Disabling overrides restores the normal live Spectra HUD.
 
-Deploy Production Control first, then this frontend. Nothing here requires a
-separate OBS browser source.
+Deploy the companion Production Control backend before this frontend, and
+verify the full workflow in OBS before putting it on air.
