@@ -12,7 +12,7 @@
   >
     <img
       class="spike-base absolute top-1/3 left-1/2 aspect-square transition-all duration-200"
-      [class.spike-pulse]="pulseState"
+      [class.spike-pulse]="pulseState()"
       [class.spike-end-white]="!isBlinking && show()"
       src="assets/misc/Spike_top_light.svg"
     />
