@@ -12,7 +12,8 @@ export class SpikePlantedComponent {
 
   readonly show = computed(() => {
     return (
-      this.dataModel.match().roundPhase === "combat" &&
+      (this.dataModel.match().manualHudEnabled ||
+        this.dataModel.match().roundPhase === "combat") &&
       this.dataModel.spikeState().planted &&
       !this.dataModel.spikeState().detonated &&
       !this.dataModel.spikeState().defused
