@@ -115,3 +115,20 @@ while already planted restarts the 45-second visual. A round win clears it too.
 The old separate winbox, winbox-clear, detonate and defuse buttons are gone.
 
 Deploy Production Control before this companion frontend and verify in OBS.
+
+## Always-on producer tactical timeout / technical pause
+
+The existing `/overlay` reads producer timeout controls from the same
+show-scoped `/api/hud/manual-state` endpoint used for score overrides.
+This new `timeoutControl` field is **independent of** `manualHud.enabled`:
+the normal HUD can display producer-triggered tactical timeouts and tech pauses
+without enabling manual score override.
+
+The production panel can start a left or right tactical timeout, trigger an
+indefinite tech pause, clear either graphic, or **Return to Client Hotkeys**.
+Tactical timeout durations are measured against the backend's absolute expiry,
+persisted per Show Code. While the panel owns the timeout graphic its state
+takes precedence over client events. Releasing control immediately restores
+the last Spectra client's `timeoutState`. All other client match data stays
+live and intact. The existing Spectra timeout component and entry/exit
+animation are reused; there is no additional OBS browser source.
