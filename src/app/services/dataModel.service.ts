@@ -204,8 +204,31 @@ export class DataModelService {
   private publishEffectiveMatch() {
     // The observer client remains authoritative for team identity, attack/defense
     // assignments, player telemetry and round phase, even during producer override.
-    const base = this.lastSpectraMatch ?? this.offlineBaseMatch;
+    const original = this.lastSpectraMatch ?? this.offlineBaseMatch;
     const state = this.manualHud;
+
+    // Timeout/tech-pause controls are always available: unlike score and spike
+    // overrides, they do not depend on manual HUD mode being enabled. When
+    // set to "client", all timeout data comes from the original Spectra feed.
+    const timeout = state?.timeoutControl;
+    const panelOwnsTimeout = timeout?.source === "panel";
+    const mode = panelOwnsTimeout ? timeout.mode : "off";
+    const countdown = (mode === "left" || mode === "right") && typeof timeout.endsAt === "number"
+      ? Math.max(0, Math.ceil((timeout.endsAt - Date.now()) / 1000)) : 0;
+    const activeMode = countdown === 0 && (mode === "left" || mode === "right") ? "off" : mode;
+    const base: IMatchData = !panelOwnsTimeout ? original : {
+      ...original,
+      timeoutState: {
+        techPause: activeMode === "tech",
+        leftTeam: activeMode === "left",
+        rightTeam: activeMode === "right",
+        timeRemaining: countdown,
+      },
+      tools: {
+        ...original.tools,
+        timeoutDuration: timeout.durationSeconds,
+      },
+    };
     if (!state?.enabled) {
       this.match.set(base);
       return;
