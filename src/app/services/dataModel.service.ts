@@ -6,6 +6,7 @@ import { Config } from "../shared/config";
 import { isEqual } from "lodash";
 import { i18nHelper } from "./i18nHelper";
 import { TranslateService } from "@ngx-translate/core";
+import { shouldFlipSidesForManualRound } from "./round-sides";
 
 @Injectable({
   providedIn: "root",
@@ -239,14 +240,25 @@ export class DataModelService {
       Date.now() - state.plantedAt < 45000;
     const event = state.winBox && typeof state.winBox.id === "string"
       ? state.winBox : null;
-    const leftAttacks = base.teams[0]?.isAttacking ?? false;
+    // The client still supplies the actual starting sides. During a detection
+    // outage its round may be stale, so apply only the side flips between the
+    // Spectra round and the producer's displayed round.
+    const flipSides = shouldFlipSidesForManualRound(
+      round,
+      original.roundNumber,
+      original.switchRound,
+      original.firstOtRound,
+    );
+    const leftAttacks = (base.teams[0]?.isAttacking ?? false) !== flipSides;
 
     this.match.set({
       ...base,
       roundNumber: round,
-      // Scores only; no mutation of client sides, names, agents or player stats.
+      // Only the displayed sides and scores are calculated in the overlay;
+      // the genuine Spectra match and player telemetry remain unchanged.
       teams: base.teams.map((team, index) => ({
         ...team,
+        isAttacking: flipSides ? !team.isAttacking : team.isAttacking,
         roundsWon: index === 0 ? state.leftScore : index === 1 ? state.rightScore : team.roundsWon,
       })),
       manualHudEnabled: true,
@@ -259,7 +271,7 @@ export class DataModelService {
         detonated: state.spike === "detonated" || (state.spike === "planted" && !planted),
         defused: state.spike === "defused",
       },
-      // The round winbox takes the winner's *current client-side* assignment.
+      // The round winbox follows the correctly displayed team sides.
       attackersWon: event ? (event.winner === "left" ? leftAttacks : !leftAttacks) : base.attackersWon,
     });
   }
