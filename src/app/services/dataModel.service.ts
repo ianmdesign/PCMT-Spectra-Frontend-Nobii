@@ -420,7 +420,14 @@ export class DataModelService {
   public playercamsInfo = computed(() => this.match().tools.playercamsInfo, {
     equal: () => false,
   });
-  public readonly roundWinBox = computed(() => this.match().tools.roundWinBox);
+  public readonly roundWinBox = computed(() => {
+    const box = this.match().tools.roundWinBox;
+    // The producer can trigger the normal winbox animation even when Spectra's
+    // own round-win box is disabled. Keep configured sponsor graphics otherwise.
+    return this.match().manualHudEnabled && this.match().manualWinBoxEvent &&
+      box.type === "disabled"
+      ? { ...box, type: "tournamentInfo" as const } : box;
+  });
 
   public mapban = signal<IMapbanSessionData>(initialMapbanData, { equal: () => false });
 }
