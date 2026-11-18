@@ -39,7 +39,10 @@ export class SpikePlantedComponent {
     this.isBlinking = true;
     this.blinkStartTime = Date.now();
     this.blinkLastTime = this.blinkStartTime;
-    this.timeoutFunction(45 * 1000, 0);
+    const plantedAt = this.dataModel.match().manualSpikePlantedAt;
+    const remaining = typeof plantedAt === "number"
+      ? Math.max(0, 45000 - (Date.now() - plantedAt)) : 45000;
+    this.timeoutFunction(remaining, 0);
   }
 
   protected endBlink() {
