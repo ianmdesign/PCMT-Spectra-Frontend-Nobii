@@ -30,6 +30,7 @@ export class DataModelService {
   // stats service is restarted while the OBS/frontend browser remains open.
   private statsWatchUnsupported = false;
   private lastSpectraMatch: IMatchData | null = null;
+  private offlineBaseMatch: IMatchData = initialMatchData;
   private manualHud: any = null;
   private manualHudShowCode = "";
   private manualHudPollSequence = 0;
@@ -123,7 +124,8 @@ export class DataModelService {
     // Re-emit the current match signal immediately so a name edit or camera
     // session change updates the live overlay without waiting for Spectra's next
     // match_data packet.
-    const current = this.match();
+    // Never copy manual scores/rounds into the genuine Spectra state.
+    const current = this.lastSpectraMatch ?? this.offlineBaseMatch;
     const next: any = {
       ...current,
       tools: {
@@ -134,6 +136,7 @@ export class DataModelService {
     };
     this.applyPcmtToolsToMatch(next);
     if (this.lastSpectraMatch) this.lastSpectraMatch = next as IMatchData;
+    else this.offlineBaseMatch = next as IMatchData;
     this.publishEffectiveMatch();
   }
 
@@ -199,7 +202,7 @@ export class DataModelService {
   }
 
   private publishEffectiveMatch() {
-    const base = this.lastSpectraMatch ?? initialMatchData;
+    const base = this.lastSpectraMatch ?? this.offlineBaseMatch;
     const state = this.manualHud;
     if (!state?.enabled) {
       this.match.set(base);
