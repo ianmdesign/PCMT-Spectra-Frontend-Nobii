@@ -16,7 +16,12 @@ export class ScoreboardComponent {
   dataModel = inject(DataModelService);
   TranslateKeys = TranslateKeys;
 
-  isShown = computed(() => this.dataModel.match().roundPhase === "shopping");
+  isShown = computed(() => {
+    const match = this.dataModel.match();
+    return match.manualHudEnabled
+      ? match.manualScoreboardVisible === true
+      : match.roundPhase === "shopping";
+  });
 
   // sort player list by KDA
   sortedTeams = computed(() => {
