@@ -10,6 +10,7 @@ export class Config {
   // PCMT Playercams / persistent name-override service.
   // Defaults to the local service and can be overridden in public/assets/config/config.json.
   pcmtToolsEndpoint = "http://localhost:5400";
+  pcmtProductionEndpoint = "https://pcmtproduction.ianmlxdesign.ca";
 
   attackerColorPrimary = "#fd4756";
   attackerColorSecondary = "#ff4557";

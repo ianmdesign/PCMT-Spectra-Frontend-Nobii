@@ -29,6 +29,11 @@ export class DataModelService {
   // Re-registering periodically makes the watch recover automatically if the
   // stats service is restarted while the OBS/frontend browser remains open.
   private statsWatchUnsupported = false;
+  private lastSpectraMatch: IMatchData | null = null;
+  private offlineBaseMatch: IMatchData = initialMatchData;
+  private manualHud: any = null;
+  private manualHudShowCode = "";
+  private manualHudPollSequence = 0;
 
   constructor() {
     this.route.queryParams.subscribe((params) => {
@@ -42,6 +47,12 @@ export class DataModelService {
       document.documentElement.lang = this.language().replace("_", "-");
       this.hideAuxiliary.set(params["hideAuxiliary"] === "true");
       this.hideAuxiliaryText.set(params["hideAuxiliaryText"] === "true");
+      const show = String(params["pcmtShow"] || "").trim().toUpperCase();
+      if (show !== this.manualHudShowCode) {
+        this.manualHudShowCode = show;
+        this.manualHud = null;
+        this.publishEffectiveMatch();
+      }
     });
 
     if (this.route.firstChild && this.route.firstChild.firstChild) {
@@ -50,6 +61,9 @@ export class DataModelService {
       });
     }
 
+    // Producer state is independent of Spectra observer registration.
+    void this.pollManualHud();
+    window.setInterval(() => void this.pollManualHud(), 1000);
     if (!this.config.serverEndpoint || this.config.serverEndpoint.length === 0) {
       console.error("No server endpoint configured, cannot connect to match data");
       return;
@@ -98,7 +112,8 @@ export class DataModelService {
     this.spectraPlayercamsInfo = { ...(data?.tools?.playercamsInfo || { enable: false }) };
 
     this.applyPcmtToolsToMatch(data);
-    this.match.set(data);
+    this.lastSpectraMatch = data as IMatchData;
+    this.publishEffectiveMatch();
     this.reportRosterToPcmt(data);
   }
 
@@ -109,7 +124,8 @@ export class DataModelService {
     // Re-emit the current match signal immediately so a name edit or camera
     // session change updates the live overlay without waiting for Spectra's next
     // match_data packet.
-    const current = this.match();
+    // Never copy manual scores/rounds into the genuine Spectra state.
+    const current = this.lastSpectraMatch ?? this.offlineBaseMatch;
     const next: any = {
       ...current,
       tools: {
@@ -119,7 +135,9 @@ export class DataModelService {
       },
     };
     this.applyPcmtToolsToMatch(next);
-    this.match.set(next);
+    if (this.lastSpectraMatch) this.lastSpectraMatch = next as IMatchData;
+    else this.offlineBaseMatch = next as IMatchData;
+    this.publishEffectiveMatch();
   }
 
   private applyPcmtToolsToMatch(data: any) {
@@ -162,6 +180,63 @@ export class DataModelService {
       this.pcmtPlayercamsInfo === null
         ? { ...this.spectraPlayercamsInfo }
         : { ...this.spectraPlayercamsInfo, ...this.pcmtPlayercamsInfo };
+  }
+
+  private async pollManualHud() {
+    const show = this.manualHudShowCode;
+    if (!show || !this.config.pcmtProductionEndpoint) return;
+    const sequence = ++this.manualHudPollSequence;
+    try {
+      const endpoint = this.config.pcmtProductionEndpoint.replace(/\/+$/, "");
+      const response = await fetch(endpoint + "/api/hud/manual-state?show=" + encodeURIComponent(show), {
+        cache: "no-store", mode: "cors",
+      });
+      if (!response.ok) throw new Error("HUD HTTP " + response.status);
+      const state: any = await response.json();
+      if (show !== this.manualHudShowCode || sequence < this.manualHudPollSequence) return;
+      this.manualHud = state;
+      this.publishEffectiveMatch();
+    } catch (error) {
+      console.warn("PCMT manual HUD state unavailable", error);
+    }
+  }
+
+  private publishEffectiveMatch() {
+    const base = this.lastSpectraMatch ?? this.offlineBaseMatch;
+    const state = this.manualHud;
+    if (!state?.enabled) {
+      this.match.set(base);
+      return;
+    }
+    const round = state.round;
+    const firstAttack = state.startingAttacker === "left";
+    // Round 13 swaps; round 25 swaps again; each OT round alternates.
+    const leftAttacking = round <= 12 ? firstAttack
+      : round <= 24 ? !firstAttack
+      : round % 2 === 1 ? firstAttack : !firstAttack;
+    const teams = [0, 1].map((index) => ({
+      ...(base.teams[index] || initialMatchData.teams[index]),
+      teamName: state.teams?.[index]?.teamName || base.teams[index]?.teamName || "",
+      teamTricode: state.teams?.[index]?.teamTricode || base.teams[index]?.teamTricode || "",
+      teamUrl: state.teams?.[index]?.teamUrl || base.teams[index]?.teamUrl || "",
+      roundsWon: index === 0 ? state.leftScore : state.rightScore,
+      isAttacking: index === 0 ? leftAttacking : !leftAttacking,
+      players: [],
+      roundRecord: [],
+    }));
+    const planted = state.spike === "planted" && typeof state.plantedAt === "number" &&
+      Date.now() - state.plantedAt < 45000;
+    this.match.set({
+      ...base, teams, roundNumber: round, roundPhase: "combat",
+      switchRound: 12, firstOtRound: 25,
+      manualSpikePlantedAt: planted ? state.plantedAt : null,
+      spikeState: {
+        planted,
+        detonated: state.spike === "detonated" || (state.spike === "planted" && !planted),
+        defused: state.spike === "defused",
+      },
+      attackersWon: false,
+    });
   }
 
   private registerStatsWatch() {

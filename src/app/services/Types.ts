@@ -15,6 +15,7 @@ export interface IMatchData {
   firstOtRound: number;
   attackersWon: boolean;
   agentSelectStartTime: number;
+  manualSpikePlantedAt?: number | null;
   toastInfo: IToastInfo;
 }
 
