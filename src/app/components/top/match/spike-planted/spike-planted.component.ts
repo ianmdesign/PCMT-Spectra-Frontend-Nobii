@@ -1,4 +1,4 @@
-import { Component, computed, inject, effect } from "@angular/core";
+import { Component, computed, inject, effect, signal, OnDestroy } from "@angular/core";
 import { DataModelService } from "../../../../services/dataModel.service";
 
 @Component({
@@ -7,7 +7,7 @@ import { DataModelService } from "../../../../services/dataModel.service";
   templateUrl: "./spike-planted.component.html",
   styleUrl: "./spike-planted.component.css",
 })
-export class SpikePlantedComponent {
+export class SpikePlantedComponent implements OnDestroy {
   dataModel = inject(DataModelService);
 
   readonly show = computed(() => {
@@ -20,82 +20,63 @@ export class SpikePlantedComponent {
     );
   });
 
+  // Signals ensure the pulse actually renders on each timer tick, even if
+  // Spectra packets are stalled and no other Angular change detection runs.
+  readonly pulseState = signal(false);
+  blinkTimerRef?: ReturnType<typeof setTimeout>;
+  pulseTimerRef?: ReturnType<typeof setTimeout>;
+  isBlinking = false;
+  private activePlantAt: number | null | undefined = undefined;
+  private plantEndAt = 0;
+
   readonly effectRef = effect(() => {
-    if (this.show() && !this.isBlinking) {
-      this.startBlink();
-    } else {
+    const shown = this.show();
+    const plantedAt = this.dataModel.match().manualSpikePlantedAt ?? null;
+    if (!shown) {
+      if (this.isBlinking || this.activePlantAt !== undefined) this.endBlink();
+      this.activePlantAt = undefined;
+      return;
+    }
+    // A second Plant press generates a new timestamp while already visible.
+    // Restart the 45s cadence instead of incorrectly leaving the old timer.
+    if (this.activePlantAt !== plantedAt) {
       this.endBlink();
+      this.activePlantAt = plantedAt;
+      this.startBlink(plantedAt);
     }
   });
 
-  blinkTimerRef?: ReturnType<typeof setTimeout>;
-  pulseTimerRef?: ReturnType<typeof setTimeout>;
-  blinkState = true;
-  pulseState = false;
-  isBlinking = false;
-  blinkStartTime = 0;
-  blinkLastTime = 0;
-
-  protected startBlink() {
+  private startBlink(plantedAt: number | null) {
+    const now = Date.now();
+    this.plantEndAt = (typeof plantedAt === "number" ? plantedAt : now) + 45000;
+    if (this.plantEndAt <= now) return;
     this.isBlinking = true;
-    this.blinkStartTime = Date.now();
-    this.blinkLastTime = this.blinkStartTime;
-    const plantedAt = this.dataModel.match().manualSpikePlantedAt;
-    const remaining = typeof plantedAt === "number"
-      ? Math.max(0, 45000 - (Date.now() - plantedAt)) : 45000;
-    this.timeoutFunction(remaining, 0);
+    this.pulse();
   }
 
-  protected endBlink() {
-    clearInterval(this.blinkTimerRef);
+  private pulse() {
+    if (!this.isBlinking) return;
+    const remaining = this.plantEndAt - Date.now();
+    if (remaining <= 0) {
+      this.endBlink();
+      return;
+    }
+    this.pulseState.set(true);
+    this.pulseTimerRef = setTimeout(() => this.pulseState.set(false), 200);
+    const interval = remaining > 20000 ? 1000 : remaining > 10000 ? 500 : 250;
+    this.blinkTimerRef = setTimeout(() => this.pulse(), Math.min(interval, remaining));
+  }
+
+  private endBlink() {
+    clearTimeout(this.blinkTimerRef);
     clearTimeout(this.pulseTimerRef);
     this.blinkTimerRef = undefined;
     this.pulseTimerRef = undefined;
-    this.blinkState = true;
-    this.pulseState = false;
+    this.pulseState.set(false);
     this.isBlinking = false;
   }
 
-  protected timeoutFunction(durationLeft: number, lastTimeout: number) {
-    this.blinkState = !this.blinkState;
-
-    this.triggerPulse();
-
-    const now = Date.now();
-    const timeDiff = now - this.blinkLastTime;
-    durationLeft -= timeDiff;
-    this.blinkLastTime = now;
-
-    if (durationLeft <= 0) {
-      this.endBlink();
-      return; //recursion exit
-    }
-
-    let nextTimeout = 0;
-    if (durationLeft > 20 * 1000) nextTimeout = 1000;
-    else if (durationLeft > 10 * 1000) nextTimeout = 500;
-    else if (durationLeft > 5 * 1000) nextTimeout = 250;
-    else if (durationLeft > 1 * 1000) nextTimeout = 250;
-    else {
-      this.endBlink();
-      return; //another recursion exit
-    }
-
-    //adjust next timeout depending on the call delay of the last iteration
-    nextTimeout -= timeDiff - lastTimeout;
-
-    this.blinkTimerRef = setTimeout(() => {
-      this.timeoutFunction(durationLeft, nextTimeout);
-    }, nextTimeout);
-  }
-
-  protected triggerPulse() {
-    clearTimeout(this.pulseTimerRef);
-
-    this.pulseState = true;
-
-    this.pulseTimerRef = setTimeout(() => {
-      this.pulseState = false;
-    }, 200);
+  ngOnDestroy() {
+    this.endBlink();
   }
 }
