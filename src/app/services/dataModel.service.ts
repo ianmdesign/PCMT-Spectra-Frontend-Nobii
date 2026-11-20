@@ -34,7 +34,7 @@ export class DataModelService {
   private offlineBaseMatch: IMatchData = initialMatchData;
   private manualHud: any = null;
   private manualHudShowCode = "";
-  private manualHudPollSequence = 0;
+  private manualHudPollInFlight = false;
 
   constructor() {
     this.route.queryParams.subscribe((params) => {
@@ -185,20 +185,29 @@ export class DataModelService {
 
   private async pollManualHud() {
     const show = this.manualHudShowCode;
-    if (!show || !this.config.pcmtProductionEndpoint) return;
-    const sequence = ++this.manualHudPollSequence;
+    if (!show || !this.config.pcmtProductionEndpoint || this.manualHudPollInFlight) return;
+
+    // Never issue overlapping reads. Previously every 1s poll incremented a
+    // sequence counter, so if responses took >1s every response was discarded:
+    // OBS could remain stuck on round 12 despite the backend advancing to 13.
+    this.manualHudPollInFlight = true;
+    const abort = new AbortController();
+    const timer = setTimeout(() => abort.abort(), 5000);
     try {
       const endpoint = this.config.pcmtProductionEndpoint.replace(/\/+$/, "");
       const response = await fetch(endpoint + "/api/hud/manual-state?show=" + encodeURIComponent(show), {
-        cache: "no-store", mode: "cors",
+        cache: "no-store", mode: "cors", signal: abort.signal,
       });
       if (!response.ok) throw new Error("HUD HTTP " + response.status);
       const state: any = await response.json();
-      if (show !== this.manualHudShowCode || sequence < this.manualHudPollSequence) return;
+      if (show !== this.manualHudShowCode) return;
       this.manualHud = state;
       this.publishEffectiveMatch();
     } catch (error) {
       console.warn("PCMT manual HUD state unavailable", error);
+    } finally {
+      clearTimeout(timer);
+      this.manualHudPollInFlight = false;
     }
   }
 
